@@ -149,10 +149,63 @@ Execute the following prompts in sequence using context-isolated subagents to tr
 
 **Mandatory gate discipline:** after every unit or phase, run `./target/release/verify-baseline . --no-domain`. Do not use `--spec-only --only` as the acceptance gate: it does not enforce Check 26 (upstream issue #744). Numeric values in tables must use separate Value and Units columns matching `schema/extracted/parametric_limits.md`; never put `value unit` in one cell.
 
+#### 4.2.A Three-Tier Scaffold-Then-Elaborate Model
+
+Every Pipeline 0 phase follows the same three tiers:
+
+1. **Tier 1 -- Compiler scaffolding (tooling).** Run the native binaries to produce the AST, digest, structural tables, STPA scaffolding, and unit skeletons. Do not invent prose at this tier.
+2. **Tier 2 -- Single-item elaboration (agents).** Dispatch exactly one fresh, context-isolated subagent per unit, scoped to that unit, using the template in 4.2.B. Never run two unit subagents concurrently.
+3. **Tier 3 -- Closed-loop acceptance (tooling).** After every unit, run the gate and advance only when it exits 0. For ConOps and Mission Intent units run `./target/release/assemble-conops --input-dir docs/conops/units/ --output-dir docs/conops/ --verify` and then `./target/release/verify-baseline . --no-domain`. For safety documents run the per-file audit and then `./target/release/verify-baseline . --no-domain`.
+
+Phase mapping:
+
+- **Phase 1 (Tier 1):** `ingest-sysml` -> `compile-sysml --compile` -> `compile-sysml --stpa-transpile --out-dir docs/safety/` -> canonical unit skeletons.
+- **Phase 2 (Tier 2):** elaborate one unit per subagent.
+- **Phase 3 (Tier 3):** assemble master documents and run the full baseline.
+- **Phase 4:** downstream backlog and contract projection.
+
+#### 4.2.B Single-Unit Elaboration Prompt Template
+
+Dispatch one fresh subagent per unit with this template; resolve the placeholders from the active catalog.
+
+```text
+Role: Single-Unit <ConOps|Safety> Elaborator -- <UNIT_ID> (one file only).
+
+Step 1: read <ACTIVE_SKILL_PATH>.
+Step 2: read <CANONICAL_TEMPLATE_PATH>.
+
+Target file: <UNIT_FILE>.
+
+Allowed inputs: <UNIT_FILE>, .pipeline/schema.sysml,
+schema/extracted/oem_bom.md, schema/extracted/interface_table.md,
+schema/extracted/parametric_limits.md, <UNIT_ADDITIONAL_INPUTS>.
+No other files.
+
+Required content (unit mandatory):
+<UNIT_MANDATORY_CONTENT>.
+
+Grounding rules:
+- Every numeric value cites schema/extracted/parametric_limits.md or an OEM file:line.
+- OEM silence -> "Not stated in OEM sources." Never invent.
+- No ungrounded protocols (Check 23).
+- Numeric values in tables use separate Value and Units columns;
+  never put `value unit` in one cell (Check 26).
+- KaTeX display math only; no math inside tables; ASCII only; no placeholders.
+
+Gates, in order (run from the repository root):
+1. ./target/release/assemble-conops --input-dir docs/conops/units/ --output-dir docs/conops/ --verify
+2. ./target/release/verify-baseline . --no-domain
+Fix this unit until both exit 0. Do not touch other files. No git.
+
+Report: exit codes, what changed, OEM-silent fields.
+---GOVERNANCE-END---
+PROCEED
+```
+
 #### 4.2.0 Worker 00: OEM Prose / BOM Ingestion & Model Synthesis Prompt (Step 0.0)
 
 **Step 0.0 Entrypoint for Unstructured / Prose Customer Documentation:**
-For customer projects starting with unstructured OEM prose manuals, PDF documentation, markdown tables, or Bill of Materials (BOM) specifications, Worker 00 provides the sanctioned, deterministic entrypoint. Extracting OEM Bill of Materials (BOM) and physical parameters into `schema/extracted/` and synthesizing canonical SysML v2 textual models in `schema/model.sysml` (or `.pipeline/schema.sysml`) is fully authorized under Check 23 (Factual Grounding & Numeric Provenance Gate) and serves as the mandatory precursor to executing the Step 0 compilation gate (`./target/release/compile-sysml --compile`).
+For customer projects starting with unstructured OEM prose manuals, PDF documentation, markdown tables, or Bill of Materials (BOM) specifications, Worker 00 provides the sanctioned, deterministic entrypoint. Extracting OEM Bill of Materials (BOM) and physical parameters into `schema/extracted/` and synthesizing canonical SysML v2 textual models in `schema/model.sysml` (or `.pipeline/schema.sysml`) is fully authorized under Check 23 (Factual Grounding & Numeric Provenance Gate) and serves as the mandatory precursor to executing the Step 0 compilation gate (`./target/release/compile-sysml --compile --schema .pipeline/schema.sysml --out .pipeline/schema.sysml --digest .pipeline/schema-digest.json`).
 
 ```text
 Execute `view_file` on `skills/spec-orchestrator/SKILL.md` as your very first step before taking any action.
@@ -173,7 +226,7 @@ Execute Level 0 OEM Ground Truth Ingestion and initial SysML v2 textual model sy
 
 2. Canonical SysML v2 Model Synthesis:
    - Execute the Level 0 ingestion translator:
-     ./target/release/ingest-sysml --schema "schema/extracted/" --format markdown --out "schema/model.sysml"
+     ./target/release/ingest-sysml -s "schema/extracted/" -f markdown -o ".pipeline/schema.sysml" -d ".pipeline/schema-digest.json"
    - Alternatively, synthesize a formal SysML v2 textual model `schema/model.sysml` directly, defining:
      * Root `package` matching the target cyber-physical system.
      * All component definitions as canonical `part def` elements with typed attributes (mass, power, dimensions, channel count, part numbers).
@@ -183,7 +236,7 @@ Execute Level 0 OEM Ground Truth Ingestion and initial SysML v2 textual model sy
 
 3. Compilation Gate Precursor Verification:
    - Verify that the generated `schema/model.sysml` passes the Step 0 SysML Compilation Gate:
-     ./target/release/compile-sysml --compile
+     ./target/release/compile-sysml --compile --schema .pipeline/schema.sysml --out .pipeline/schema.sysml --digest .pipeline/schema-digest.json
    - Ensure `.pipeline/schema.sysml` and `.pipeline/schema-digest.json` are successfully generated without compilation errors.
    - Verify Check 23 compliance (Factual Grounding & Numeric Provenance Gate): all physical parameters and component counts in `schema/model.sysml` strictly match the Level 0 OEM ground truth in `schema/extracted/`.
 
@@ -221,6 +274,7 @@ Execute front-end modular CONOPS and Tactical Mission Intent synthesis for the t
    - Domain-specific regulatory and safety classification relevant to the operational envelope.
 
 3. Modular Deliverable Generation:
+   - Use the three-tier model in 4.2.A: scaffold with tooling, then elaborate one unit per subagent with the 4.2.B template.
    - Do NOT draft monolithic files directly. Author modular units conforming to JSON Schema contracts under:
      * `docs/conops/units/conops/`: 12 canonical units (`01_METADATA_AND_OVERVIEW.md` through `12_EMERGENCY_DECISION_MATRIX.md`), including decoupled 3-tier architecture in `04_SYSTEM_ARCHITECTURE.md`.
      * `docs/conops/units/mission_intent/`: 10 canonical units (`01_COMMANDERS_INTENT.md` through `10_OPERATIONAL_ALLOCATION_TAGS.md`), including operational `06_ROE_SAFETY_INTERLOCKS.md` and tactical `08_GO_NO_GO_MATRIX.md`.
@@ -271,6 +325,7 @@ Perform STPA hazard analysis, FMECA failure mode criticality evaluation, and dom
      6. Formal Safety Constraints (SC-1..N)
      7. FMECA Criticality Matrix: Component failure modes with 15+ rows, Severity (S), Occurrence (O), Detection (D), and Risk Priority Numbers (RPN = S * O * D)
      8. Domain Safety Framework & Risk Mitigations Table: Risk class classification, integrity levels, and comprehensive mapping of domain safety objectives and mitigations to schema-derived regulatory requirements
+   - Use the three-tier model in 4.2.A: scaffold with `--stpa-transpile`, then elaborate one safety document per subagent with the 4.2.B template.
    - Include Run-Time Assurance (RTA) Safety Net monitor architecture.
    - Include MATLAB / Simulink / Stateflow / Embedded Coder model integration baseline hooks and SLDV formal proof properties.
    - KaTeX / LaTeX Math Formatting Mandate: All multi-line aligned equations MUST be enclosed in `\begin{aligned} ... \end{aligned}` within `$$` delimiters on dedicated lines. Bare alignment tabs `&` outside an alignment environment (`aligned`, `matrix`, `cases`) and `\begin{align*}` environments are strictly forbidden. Markdown Table Math Prohibition Rule: Strictly ban `$ ... $` and `$$ ... $$` LaTeX math delimiters inside table headers, rows, and cells; plain text and Unicode (e.g. `Initial S`, `ΔV`, `λ`, `°C`, `≥`, `≤`, `→`, `10⁻⁶`) must be used instead, with 1:1 column count match between header and delimiter rows.
