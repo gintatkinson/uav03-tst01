@@ -78,10 +78,10 @@ For customer projects starting with unstructured OEM technical documentation, PD
 
 ```bash
 # Run Level 0 OEM Ground Truth ingestion (native Rust binary)
-./target/release/ingest-sysml --schema "schema/extracted/" --format markdown --out "schema/model.sysml"
+./target/release/ingest-sysml -s "schema/extracted/" -f markdown -o ".pipeline/schema.sysml" -d ".pipeline/schema-digest.json"
 
 # Verify model compilation gate (native Rust binary)
-./target/release/compile-sysml --compile
+./target/release/compile-sysml --compile --schema .pipeline/schema.sysml --out .pipeline/schema.sysml --digest .pipeline/schema-digest.json
 ```
 
 ### 3.2 In-Place Pipeline Tooling Update
@@ -147,6 +147,8 @@ flowchart TD
 
 Execute the following prompts in sequence using context-isolated subagents to transform unstructured intent, operational scenarios, and interface schemas into formal CONOPS, STPA hazard matrices, and SysML v2 AST models:
 
+**Mandatory gate discipline:** after every unit or phase, run `./target/release/verify-baseline . --no-domain`. Do not use `--spec-only --only` as the acceptance gate: it does not enforce Check 26 (upstream issue #744). Numeric values in tables must use separate Value and Units columns matching `schema/extracted/parametric_limits.md`; never put `value unit` in one cell.
+
 #### 4.2.0 Worker 00: OEM Prose / BOM Ingestion & Model Synthesis Prompt (Step 0.0)
 
 **Step 0.0 Entrypoint for Unstructured / Prose Customer Documentation:**
@@ -166,7 +168,7 @@ Directive:
 Execute Level 0 OEM Ground Truth Ingestion and initial SysML v2 textual model synthesis for customer projects starting from unstructured OEM prose manuals, PDF documentation, markdown tables, or Bill of Materials (BOM) specifications:
 
 1. Unstructured & Semi-Structured Ingestion Scope:
-   - Ingest raw OEM technical documentation, flight/operating manuals, ICD tables, and BOM markdown tables located in `schema/` and `schema/extracted/`.
+   - Ingest raw OEM technical documentation, flight/operating manuals, ICD tables, and BOM markdown tables from a curated allowlist under `schema/`. Validate each transcription against its source PDF (file:line) and record pass/fail. Exclude derived artifacts (`schema/model.sysml`, `schema/extracted/*`, `.pipeline/schema.sysml`) and any unverified ingestion transcription from the input set.
    - Authorized Under Check 23: Extract physical parameters, component hierarchies, mass/power budgets, port/pin interfaces, and operational envelopes into machine-readable Markdown tables in `schema/extracted/` (e.g., `schema/extracted/oem_bom.md`, `schema/extracted/interface_table.md`, `schema/extracted/parametric_limits.md`).
 
 2. Canonical SysML v2 Model Synthesis:
@@ -186,7 +188,7 @@ Execute Level 0 OEM Ground Truth Ingestion and initial SysML v2 textual model sy
    - Verify Check 23 compliance (Factual Grounding & Numeric Provenance Gate): all physical parameters and component counts in `schema/model.sysml` strictly match the Level 0 OEM ground truth in `schema/extracted/`.
 
 Defect Filing Directive:
-If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, generate the verified 7-section defect dossier, and submit it via `./target/release/reconcile-backlog create-issue --label bug` (or `./target/release/file-defect`). Issue auto-closing keywords or issue close commands are strictly forbidden.
+If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, produce a verified 7-section defect dossier under `.pipeline/defects/<NAME>.md`, and validate/publish it with `./target/release/verify-baseline check-defect .pipeline/defects/<NAME>.md`. Issue auto-closing keywords or issue close commands are strictly forbidden.
 
 PROCEED
 ```
@@ -231,9 +233,10 @@ Execute front-end modular CONOPS and Tactical Mission Intent synthesis for the t
    - Execute deterministic assembly: `./target/release/assemble-conops --input-dir docs/conops/units/ --output-dir docs/conops/ --verify`.
    - Compile master specification documents: `./target/release/assemble-conops --input-dir docs/conops/units/ --output-dir docs/conops/`.
    - Gate 26 Validation: Execute `./target/release/verify-baseline . --no-domain`.
+   - Per-unit gate: after each unit, run `./target/release/verify-baseline . --no-domain` and fix until exit 0 before advancing. Do not use `--spec-only --only` as the acceptance gate (issue #744).
 
 Defect Filing Directive:
-If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, generate the verified 7-section defect dossier, and submit it via `./target/release/reconcile-backlog create-issue --label bug` (or `./target/release/file-defect`). Issue auto-closing keywords or issue close commands are strictly forbidden.
+If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, produce a verified 7-section defect dossier under `.pipeline/defects/<NAME>.md`, and validate/publish it with `./target/release/verify-baseline check-defect .pipeline/defects/<NAME>.md`. Issue auto-closing keywords or issue close commands are strictly forbidden.
 
 PROCEED
 ```
@@ -331,7 +334,7 @@ Synthesize Level 1C Logical Interface Specifications and Signal Dictionaries fro
    - Verify published issue body integrity via live tracker inspection.
 
 Defect Filing Directive:
-If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, generate the verified 7-section defect dossier, and submit it via `./target/release/reconcile-backlog create-issue --label bug` (or `./target/release/file-defect`). Issue auto-closing keywords or issue close commands are strictly forbidden.
+If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, produce a verified 7-section defect dossier under `.pipeline/defects/<NAME>.md`, and validate/publish it with `./target/release/verify-baseline check-defect .pipeline/defects/<NAME>.md`. Issue auto-closing keywords or issue close commands are strictly forbidden.
 
 PROCEED
 ```
@@ -369,7 +372,7 @@ Transform structural schemas and SysML v2 AST models into formal Agile Epics and
    - Register Epics via `./target/release/reconcile-backlog create-issue "<file>" "epic" "<title>"`.
 
 Defect Filing Directive:
-If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, generate the verified 7-section defect dossier, and submit it via `./target/release/reconcile-backlog create-issue --label bug` (or `./target/release/file-defect`). Issue auto-closing keywords or issue close commands are strictly forbidden.
+If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, produce a verified 7-section defect dossier under `.pipeline/defects/<NAME>.md`, and validate/publish it with `./target/release/verify-baseline check-defect .pipeline/defects/<NAME>.md`. Issue auto-closing keywords or issue close commands are strictly forbidden.
 
 PROCEED
 ```
@@ -402,7 +405,7 @@ Extract Behavior-Driven Development (BDD) User Stories, UML Sequence Lifelines, 
    - Verify live published payload on the issue tracker (`gh issue view <ID> --json body` or `glab issue view <ID>`).
 
 Defect Filing Directive:
-If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, generate the verified 7-section defect dossier, and submit it via `./target/release/reconcile-backlog create-issue --label bug` (or `./target/release/file-defect`). Issue auto-closing keywords or issue close commands are strictly forbidden.
+If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, produce a verified 7-section defect dossier under `.pipeline/defects/<NAME>.md`, and validate/publish it with `./target/release/verify-baseline check-defect .pipeline/defects/<NAME>.md`. Issue auto-closing keywords or issue close commands are strictly forbidden.
 
 PROCEED
 ```
@@ -435,7 +438,7 @@ Derive formal UML System Use Cases directly from SysML v2 `use case def` AST blo
    - Verify live published payload on the issue tracker (`gh issue view <ID> --json body` or `glab issue view <ID>`).
 
 Defect Filing Directive:
-If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, generate the verified 7-section defect dossier, and submit it via `./target/release/reconcile-backlog create-issue --label bug` (or `./target/release/file-defect`). Issue auto-closing keywords or issue close commands are strictly forbidden.
+If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, produce a verified 7-section defect dossier under `.pipeline/defects/<NAME>.md`, and validate/publish it with `./target/release/verify-baseline check-defect .pipeline/defects/<NAME>.md`. Issue auto-closing keywords or issue close commands are strictly forbidden.
 
 PROCEED
 ```
@@ -469,7 +472,7 @@ Synthesize MIL-STD-881E Work Breakdown Structures (WBS), Technical Realization R
    - Verify published issue body integrity via live tracker inspection (`gh issue view <ID> --json body` or `glab issue view <ID>`).
 
 Defect Filing Directive:
-If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, generate the verified 7-section defect dossier, and submit it via `./target/release/reconcile-backlog create-issue --label bug` (or `./target/release/file-defect`). Issue auto-closing keywords or issue close commands are strictly forbidden.
+If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, produce a verified 7-section defect dossier under `.pipeline/defects/<NAME>.md`, and validate/publish it with `./target/release/verify-baseline check-defect .pipeline/defects/<NAME>.md`. Issue auto-closing keywords or issue close commands are strictly forbidden.
 
 PROCEED
 ```
@@ -632,7 +635,7 @@ Execute Two-Path (Dual-Track) Model-Based Design (MBD) simulation synthesis and 
    - Formal DO-331 Verification Report: Generate comprehensive verification report `docs/reports/simulink_results/<FEATURE-ID>_simulation_results.md` detailing MC/DC coverage mapping, transition truth tables, fault-injection scenarios, and numerical parity logs.
 
 Defect Filing Directive:
-If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, generate the verified 7-section defect dossier, and submit it via `./target/release/reconcile-backlog create-issue --label bug` (or `./target/release/file-defect`). Issue auto-closing keywords or issue close commands are strictly forbidden.
+If any compiler fault, schema inconsistency, or invariant violation is discovered, you are strictly forbidden from filing raw issues directly. You MUST dispatch a fresh context-isolated subagent with `skills/adversarial-code-auditor/SKILL.md` to perform the 5-pillar audit, produce a verified 7-section defect dossier under `.pipeline/defects/<NAME>.md`, and validate/publish it with `./target/release/verify-baseline check-defect .pipeline/defects/<NAME>.md`. Issue auto-closing keywords or issue close commands are strictly forbidden.
 
 PROCEED
 ```
