@@ -34,8 +34,10 @@ This platform explicitly declares **MATLAB / Simulink / Stateflow / Embedded Cod
 
 - `.deap/bin/`: Five precompiled, `Ed25519`-attested Ferrocene `stable-26.08.0` native binaries (`ingest-sysml`, `assemble-conops`, `compile-sysml`, `reconcile-backlog`, `verify-baseline`).
 - `.deap/update-manifest.json`: Signed `0x60` RFC 8785 JCS release manifest (SHA-256 `1243abcb151f276806ea96b01e77b671e3eed03b4c8e1653fa5bd5baee8b3619`) verified under Tier-2 public key `VK_REL = 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b`.
+- `.agents/skills/<skill-name>/SKILL.md`: 12 modernized native Antigravity engineering skills stored in real, non-symlink directories (`spec-orchestrator` entrypoint with Step 0.0 / Worker 00 brownfield ingestion through `adversarial-code-auditor` and `project-constitution`).
 - `criticalup.toml`: Pinned Ferrocene `stable-26.08.0` qualified Rust toolchain manifest.
-- `schema/lib/`: Normative foundation libraries (`ISQ.sysml`, `RAAML.sysml`) validated by `verify-baseline perimeter --schema-scope lib-only`.
+- `schema/lib/`: Normative foundation libraries (`ISQ.sysml`, `RAAML.sysml`) validated by `verify-baseline perimeter --schema-scope lib-only` (and `--schema-scope all` once customer `schema/<domain>/` models are authored).
+- `docs/reference/`: Customer OEM manuals, PDFs, ICDs, and datasheets (tracked via `docs/reference/.gitkeep`), with grounded pure-ASCII extraction tables synthesized into `docs/reference/extracted/*.md`.
 - `downstream-profiles/`: Self-contained Downstream Profile Export Bundle:
   - [downstream-profiles/README.md](./downstream-profiles/README.md) & [DOWNSTREAM_INSTALLATION_AND_CI_GUIDE.md](./downstream-profiles/DOWNSTREAM_INSTALLATION_AND_CI_GUIDE.md)
   - `profile-dart-flutter-hmi/`: Ring-3 Dart/Flutter coding standard, safety-critical real-time UI blueprint, Dart-Rust FFI synthesis profile, and C11 `include/deap_ffi.h`
@@ -43,7 +45,7 @@ This platform explicitly declares **MATLAB / Simulink / Stateflow / Embedded Cod
   - `profile-non-rust-targets/`: MATLAB/Simulink/Stateflow/Embedded Coder, ANSYS SCADE, SPARK 2014, MISRA C/C++, AADL, and FMI profiles
 - `.gitlab-ci.yml`: Two-lane downstream CI pipeline (`deap-perimeter:macos-arm64` and `deap-airlock:linux`).
 - `AGENTS.md` & `CLAUDE.md`: Project-scoped agent governance rules and verification gates.
-- `docs/`: Preserved UAS catalogs, ConOps/METL units, FMECA/STAMP-STPA research corpus, `docs/OPERATOR_PROMPT_CATALOG.md`, and clean specification landing zones.
+- `docs/`: Preserved UAS catalogs, ConOps/METL units, FMECA/STAMP-STPA research corpus, `docs/reference/`, `docs/OPERATOR_PROMPT_CATALOG.md`, and clean specification landing zones.
 
 ---
 
@@ -66,16 +68,15 @@ The repository ships the five-binary `B_5` release tuple built from `gintatkinso
 ### 4.0 Customer Project Bootstrap from This Template
 
 ```sh
-# Pull template tree into an initialized customer project clone, install POSIX hooks, and run perimeter gate
 git remote add template https://github.com/gintatkinson/DEAP-uas-infrastructure-safety.git 2>/dev/null || \
   git remote set-url template https://github.com/gintatkinson/DEAP-uas-infrastructure-safety.git
 git fetch template main && git reset --hard template/main && git clean -fd
-./.deap/bin/verify-baseline setup-hooks --workspace .
+./.deap/bin/verify-baseline setup-hooks --workspace . --no-domain --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b && echo "BOOTSTRAP_HOOKS: PASS"
 ./.deap/bin/verify-baseline perimeter \
   --workspace . \
   --perimeter-role downstream-consumer \
   --schema-scope lib-only \
-  --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b
+  --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b && echo "PERIMETER_BOOTSTRAP: PASS"
 ```
 
 ### 4.1 Mandatory Local Verification Gates (Quick Start)
@@ -83,45 +84,48 @@ git fetch template main && git reset --hard template/main && git clean -fd
 Verify the detached `Ed25519` release manifest signature, all five `B_5` binary digests, zero-source perimeter isolation (`N_up_src == 0`), zero symlinks, pure 7-bit LF ASCII, and `ISQ`/`RAAML` foundation lowering:
 
 ```sh
-# 1. Verify signed 0x60 UpdateManifest and all 5 B_5 binaries
 ./.deap/bin/verify-baseline verify-manifest \
   --workspace . \
   --manifest .deap/update-manifest.json \
   --bundle-dir .deap/bin \
-  --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b
+  --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b && echo "MANIFEST: PASS"
 
-# 2. Run snapshot-free downstream perimeter, ASCII, and ISQ/RAAML gate
 ./.deap/bin/verify-baseline perimeter \
   --workspace . \
   --perimeter-role downstream-consumer \
   --schema-scope lib-only \
   --manifest .deap/update-manifest.json \
   --bundle-dir .deap/bin \
-  --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b
+  --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b && echo "PERIMETER: PASS"
 ```
 
 ### 4.2 Atomic `B_5` Bundle Upgrade & Deterministic Git Hooks
 
 ```sh
-# Install deterministic 0o755 POSIX pre-commit and pre-push Git hooks
-./.deap/bin/verify-baseline setup-hooks --workspace .
+./.deap/bin/verify-baseline setup-hooks \
+  --workspace . \
+  --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b && echo "FULL_HOOKS: PASS"
 
-# Atomically stage and activate an upgraded signed B_5 bundle with .prev rollback safety
 ./.deap/bin/verify-baseline install-bundle \
   --workspace . \
   --perimeter-role downstream-consumer \
   --bundle-dir /path/to/stage10-release-bundle/aarch64-apple-darwin \
   --manifest /path/to/stage10-release-bundle/update-manifest.json \
   --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b \
-  --install-dir .deap/bin
+  --install-dir .deap/bin && echo "INSTALL_BUNDLE: PASS"
 ```
 
 ### 4.3 End-to-End 5-Stage `deap03` Specification & Synthesis Pipeline
 
 ```mermaid
 flowchart TD
+    subgraph Step0["Step 0: Reference Corpus and Agent Skills"]
+        RefDocs["docs/reference/*.pdf + .agents/skills/spec-orchestrator"] --> Extracted["docs/reference/extracted/*.md + schema/<domain>/*.sysml"]
+    end
+
     subgraph Stage1["Stage 1: Schema Ingestion and Snapshot Sealing"]
-        SchemaDir["schema/lib/{ISQ,RAAML}.sysml + schema/*.sysml"] --> Ingest["ingest-sysml seal"]
+        Extracted --> Ingest["ingest-sysml seal"]
+        SchemaDir["schema/lib/{ISQ,RAAML}.sysml + schema/<domain>/*.sysml"] --> Ingest
         Ingest --> Snapshot[".deap/ir.snapshot.bin"]
     end
 
@@ -145,50 +149,50 @@ flowchart TD
     end
 ```
 
-In populated customer UAS mission workspaces cloned from this template, execute the five pipeline stages in order:
+In populated customer UAS mission workspaces cloned from this template, execute `.agents/skills/spec-orchestrator/SKILL.md` (starting at Step 0.0 for `docs/reference/*.pdf` extraction) followed by the five pipeline stages in order:
 
 ```sh
-# Stage 1: Seal canonical SysML v2 + RAAML v1 IR snapshot (or lift brownfield Markdown via --format markdown --from-docs)
-./.deap/bin/ingest-sysml seal --workspace . --schema-dir schema --out-snapshot .deap/ir.snapshot.bin
+./.deap/bin/ingest-sysml seal --workspace . --schema-dir schema --out-snapshot .deap/ir.snapshot.bin && echo "STAGE1_SEAL: PASS"
 
-# Stage 2: Project deterministic CONOPS.md, MISSION_INTENT.md, and R_conops receipt
-./.deap/bin/assemble-conops project --workspace . --snapshot .deap/ir.snapshot.bin --out-dir docs/conops
+./.deap/bin/assemble-conops project --workspace . --snapshot .deap/ir.snapshot.bin --out-dir docs/conops && echo "STAGE2_CONOPS: PASS"
 
-# Stage 3: Run 5-pass safety compiler and emit modular #![no_std] Rust contracts + Kani harnesses
 ./.deap/bin/compile-sysml build \
   --workspace . \
   --snapshot .deap/ir.snapshot.bin \
   --conops-receipt .deap/conops.receipt.json \
   --out-docs docs \
-  --out-contracts crates/uas-core/src/generated \
-  --out-kani crates/uas-core/src/kani_generated \
-  --emit-modular-rust crates/uas-core/src/deap_modular
+  --out-contracts crates/mission-contracts/src/generated \
+  --out-kani verification/mission-kani/src/generated \
+  --emit-modular-rust crates/mission-contracts/src/deap_modular \
+  --receipt .deap/compile.receipt.json && echo "STAGE3_COMPILE: PASS"
 
-# Stage 4: Project Agile/WBS specifications and run 3-way Merkle tracker reconciliation
-./.deap/bin/reconcile-backlog project --workspace . --snapshot .deap/ir.snapshot.bin --docs-dir docs
-./.deap/bin/reconcile-backlog sync --workspace . --snapshot .deap/ir.snapshot.bin --docs-dir docs --schema-dir schema --provider offline
+./.deap/bin/reconcile-backlog project --workspace . --snapshot .deap/ir.snapshot.bin --docs-dir docs && echo "STAGE4_PROJECT: PASS"
+./.deap/bin/reconcile-backlog sync --workspace . --snapshot .deap/ir.snapshot.bin --docs-dir docs --schema-dir schema --provider offline && echo "STAGE4_SYNC: PASS"
 
-# Stage 5: Run full TQL-5 independent baseline audit across populated domain artifacts
-./.deap/bin/verify-baseline audit --workspace . --schema-dir schema --docs-dir docs --snapshot .deap/ir.snapshot.bin
+./.deap/bin/verify-baseline audit --workspace . --schema-dir schema --docs-dir docs --snapshot .deap/ir.snapshot.bin && echo "STAGE5_AUDIT: PASS"
+./.deap/bin/verify-baseline perimeter \
+  --workspace . \
+  --perimeter-role downstream-consumer \
+  --schema-scope all \
+  --manifest .deap/update-manifest.json \
+  --bundle-dir .deap/bin \
+  --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b && echo "STAGE5_PERIMETER: PASS"
 ```
 
 ### 4.4 Multi-Provider Backlog Reconciliation Commands
 
 ```sh
-# Option A: Offline Air-Gapped / Deterministic Local Store (.deap/offline-tracker.json)
-./.deap/bin/reconcile-backlog sync --workspace . --provider offline
+./.deap/bin/reconcile-backlog sync --workspace . --provider offline && echo "SYNC_OFFLINE: PASS"
 
-# Option B: GitHub Issues Reconciliation
-./.deap/bin/reconcile-backlog sync --workspace . --provider github --project "<owner>/<repo>" --token "$GITHUB_TOKEN"
+./.deap/bin/reconcile-backlog sync --workspace . --provider github --project "<owner>/<repo>" --token "$GITHUB_TOKEN" && echo "SYNC_GITHUB: PASS"
 
-# Option C: GitLab SaaS or Self-Managed SCIF Air-Gapped Reconciliation
 ./.deap/bin/reconcile-backlog sync \
   --workspace . \
   --provider gitlab \
   --endpoint "https://gitlab.internal.example/api/v4" \
   --project "<group>/<repo>" \
   --ca-bundle /path/to/ca-bundle.pem \
-  --token "$GITLAB_TOKEN"
+  --token "$GITLAB_TOKEN" && echo "SYNC_GITLAB: PASS"
 ```
 
 ---

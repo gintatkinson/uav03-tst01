@@ -5,7 +5,9 @@
 - **Cryptographic Release Attestation**: Signed `0x60` RFC 8785 JCS manifest at `.deap/update-manifest.json` (SHA-256 `1243abcb151f276806ea96b01e77b671e3eed03b4c8e1653fa5bd5baee8b3619`) verified against Tier-2 `Ed25519` public key `VK_REL = 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b`.
 - **Workspace Perimeter Role (`--perimeter-role downstream-consumer`)**:
   * Zero upstream compiler source directories (`N_up_src == 0`; `crates/deap-*` and upstream `blueprints/*.md` are strictly forbidden).
-  * Legacy DEAP01 directories (`.pipeline/`, `rules/`, `skills/`, `.agents/`, `target/release/`) and symlinks are permanently retired and forbidden.
+  * Legacy DEAP01 directories (`.pipeline/`, `rules/`, root `skills/`, `target/release/`, `scripts/*.py`, `parity_auditor/`) and symlinks anywhere outside `.git/` are permanently retired and forbidden.
+  * Modernized native Antigravity engineering skills reside in real, non-symlink directories at `.agents/skills/<skill-name>/SKILL.md` (12 skills starting at `.agents/skills/spec-orchestrator/SKILL.md`).
+  * Customer brownfield OEM datasheets, manuals, and ICDs reside in `docs/reference/` (tracked via `docs/reference/.gitkeep`), with grounded pure-ASCII extraction tables synthesized under `docs/reference/extracted/*.md` (`<file>#p<page>` citations).
   * Foundation SysML v2 / OMG RAAML v1.0 libraries reside strictly at `schema/lib/ISQ.sysml` and `schema/lib/RAAML.sysml` (`--schema-scope lib-only` in template repositories; `--schema-scope all` in populated customer mission workspaces).
   * Downstream architecture, coding standards, C11 FFI headers, and multi-toolchain synthesis profiles reside under `downstream-profiles/` (`README.md`, `DOWNSTREAM_INSTALLATION_AND_CI_GUIDE.md`, `profile-dart-flutter-hmi/`, `profile-target-app-runtime/`, and `profile-non-rust-targets/`).
 
@@ -24,7 +26,8 @@ Thought blocks MUST focus directly on the user's active request and technical re
 ## Domain Distribution Template Clean Landing Zone & Asset Preservation Invariant
 - **Clean Landing Zone Mandate**: In upstream domain distribution templates (`DEAP-*`), `docs/epics/`, `docs/features/`, `docs/user-stories/`, and `docs/use-cases/` remain clean landing zones with `.gitkeep`, while `schema/lib/{ISQ,RAAML}.sysml` supplies the normative foundation library set (`--schema-scope lib-only`).
 - **Curated Domain Asset Preservation**: Domain catalogs, reference ConOps/Mission Intent exemplars, and primary safety research corpus files (`docs/{catalogs,conops,domain,research}/`) are authoritative domain assets and MUST NOT be truncated or deleted without explicit user authorization.
-- **Customer Workspace Boundary**: Concrete customer mission models (`schema/*.sysml`), generated Rust contracts, Simulink `.slx`/`.sldd` models, ROS2/PX4 flight code, and Flutter HMI code (`app_flutter/`) belong in downstream customer project repositories cloned from this template.
+- **Customer Workspace Boundary**: Concrete customer mission models (`schema/<domain>/*.sysml`), grounded OEM extractions (`docs/reference/extracted/*.md`), generated `#![no_std]` Rust contracts (`crates/mission-contracts/src/generated`), Kani proof harnesses (`verification/mission-kani/src/generated`), Simulink `.slx`/`.sldd` models, ROS2/PX4 flight code, and Flutter HMI code (`app_flutter/`) belong in downstream customer project repositories cloned from this template.
+- **Downstream `compile-sysml` Output Rule (`DEAP_E0104`)**: Every invocation of `./.deap/bin/compile-sysml` (`check`, `build`, `supersede-seed`, `inject-docstrings`) MUST explicitly pass `--out-contracts crates/mission-contracts/src/generated --out-kani verification/mission-kani/src/generated` (never default `crates/deap-contracts/src/generated`).
 
 ## Lazy On-Demand Governance Loading (Zero Per-Turn Initialization Ceremony)
 - **Zero Per-Turn Startup Ceremony**: Conversational, diagnostic, and read-only turns execute zero startup ceremony. Agents MUST NEVER halt a user's prompt to emit startup receipt tables.
@@ -47,7 +50,7 @@ Thought blocks MUST focus directly on the user's active request and technical re
     `./.deap/bin/verify-baseline verify-manifest --workspace . --manifest .deap/update-manifest.json --bundle-dir .deap/bin --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b`
   * Downstream Perimeter, Zero-Symlink, Pure 7-Bit ASCII & Foundation Lowering Gate:
     `./.deap/bin/verify-baseline perimeter --workspace . --perimeter-role downstream-consumer --schema-scope lib-only --manifest .deap/update-manifest.json --bundle-dir .deap/bin --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b`
-- **Retired Tooling**: Legacy `target/release/*` DEAP01 binaries, `.pipeline/*`, `scripts/*.py`, `pytest`, and shell wrapper scripts are permanently retired and MUST NOT be recreated or invoked.
+- **Retired Tooling & Interactive Zsh Safety**: Legacy `target/release/*` DEAP01 binaries, `.pipeline/*`, `scripts/*.py`, `pytest`, and shell wrapper scripts are permanently retired and MUST NOT be recreated or invoked. Keep shell command blocks free of `#` comment lines (explain steps in prose instead) so macOS interactive `zsh` executes every snippet cleanly.
 
 ## Mandatory Subagent Dispatch, TDD & Zero-Mocking Persistence Rules
 - **Subagent Context Isolation**: Multi-item research, specification elaboration, and feature implementation loops MUST dispatch context-isolated single-item subagents with explicit target file boundaries and 3-layer Definition of Done ((1) Domain State & Data Model, (2) Logic & Safety State Management, (3) Presentation / Middleware / Actuator Interface Binding).
