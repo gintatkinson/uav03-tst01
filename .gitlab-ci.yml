@@ -14,7 +14,7 @@ deap-perimeter:macos-arm64:
     - ./.deap/bin/verify-baseline perimeter
         --workspace .
         --perimeter-role downstream-consumer
-        --schema-scope lib-only
+        --schema-scope all
         --verify-key "$DEAP_TRUSTED_VK"
     - ./.deap/bin/verify-baseline verify-manifest
         --workspace .
@@ -40,6 +40,6 @@ deap-airlock:linux:
         ./.deap/bin/x86_64-unknown-linux-gnu/verify-baseline perimeter
           --workspace .
           --perimeter-role downstream-consumer
-          --schema-scope lib-only
+          --schema-scope all
           --verify-key "$DEAP_TRUSTED_VK";
       fi

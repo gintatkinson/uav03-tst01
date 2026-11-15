@@ -49,7 +49,7 @@ Thought blocks MUST focus directly on the user's active request and technical re
   * Bundle & Signature Parity Gate:
     `./.deap/bin/verify-baseline verify-manifest --workspace . --manifest .deap/update-manifest.json --bundle-dir .deap/bin --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b`
   * Downstream Perimeter, Zero-Symlink, Pure 7-Bit ASCII & Foundation Lowering Gate:
-    `./.deap/bin/verify-baseline perimeter --workspace . --perimeter-role downstream-consumer --schema-scope lib-only --manifest .deap/update-manifest.json --bundle-dir .deap/bin --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b`
+    `./.deap/bin/verify-baseline perimeter --workspace . --perimeter-role downstream-consumer --schema-scope all --manifest .deap/update-manifest.json --bundle-dir .deap/bin --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b`
 - **Retired Tooling & Interactive Zsh Safety**: Legacy `target/release/*` DEAP01 binaries, `.pipeline/*`, `scripts/*.py`, `pytest`, and shell wrapper scripts are permanently retired and MUST NOT be recreated or invoked. Keep shell command blocks free of `#` comment lines (explain steps in prose instead) so macOS interactive `zsh` executes every snippet cleanly.
 
 ## Mandatory Subagent Dispatch, TDD & Zero-Mocking Persistence Rules

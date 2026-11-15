@@ -93,7 +93,7 @@ Verify the detached `Ed25519` release manifest signature, all five `B_5` binary 
 ./.deap/bin/verify-baseline perimeter \
   --workspace . \
   --perimeter-role downstream-consumer \
-  --schema-scope lib-only \
+  --schema-scope all \
   --manifest .deap/update-manifest.json \
   --bundle-dir .deap/bin \
   --verify-key 606a0547d9928339c7c8f8dc7cd075969390fa8fb3497b3702013b9074d6d54b && echo "PERIMETER: PASS"
