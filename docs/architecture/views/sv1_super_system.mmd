@@ -1,0 +1,71 @@
+flowchart TD
+    %% DoDAF SV-1 Super-System Operational Context - Avenger5V25IntegratedSystem (Rule E5 Decoupled View)
+
+    subgraph External_Actors ["External Actors and Operating Environment"]
+        direction TB
+        Pilot["Pilot Operator<br/>Role Auth and Mission C2"]
+        PayloadOperator["Payload Operator<br/>EO-IR Track and ESAD Arm"]
+        LaunchAssistant["Launch Assistant<br/>PL-40 Prep and RBF Order"]
+        ContestedEnv["Contested Environment<br/>GNSS RF Wind and Target"]
+        Pilot ~~~ ContestedEnv
+    end
+
+    subgraph Ground_Segment ["GroundLaunchAndCommandSegment"]
+        direction TB
+        SwarmC2OperatorConsole["SwarmC2OperatorConsole<br/>SwarmC2 Win11 Rugged Tablet<br/>• gcsStationPort (INOUT)"]
+        GroundRfStationAndAntennaTracker["GroundRfStationAndAntennaTracker<br/>Ground DTC RF MARS DIR OMNI<br/>• gcsStationPort (INOUT)<br/>• rfAirPort (INOUT)"]
+        Pl40PneumaticLauncher["Pl40PneumaticLauncher<br/>ELI PL-40 Rev 2.6 Rail<br/>• mechLaunchOut (OUT)"]
+    end
+
+    subgraph Air_Power_Prop ["AirframePowerAndPropulsion"]
+        direction TB
+        MainBatteryAndFuseUnit["MainBatteryAndFuseUnit<br/>12S2P Pack and 200A Fuse<br/>• protectedDcOut (OUT)"]
+        PowerMeterAndRbfSwitch["PowerMeterAndRbfSwitch<br/>V or I Meter and RBF Key 2<br/>• mainDcIn (IN)<br/>• escDriveOut (INOUT)<br/>• trunkDcOut970cm (OUT)<br/>• can1Tap (INOUT)"]
+        ElectricPropulsionUnit["ElectricPropulsionUnit<br/>Airframe IBEX160 and AXI5345<br/>• escDriveIn (INOUT)<br/>• mechLaunchRailIn (IN)<br/>• inertialSs1Out (OUT)"]
+        ElectronicPowerSystemEps["ElectronicPowerSystemEps<br/>DC-DC Rails and Load Switch<br/>• trunkDcIn (IN)<br/>• can1Tap (INOUT)<br/>• servo8VOut (OUT)<br/>• radio12VOut (OUT)<br/>• esad14VOut (OUT)<br/>• sensorPowerOut (OUT)<br/>• gimbalPowerOut (OUT)"]
+    end
+
+    subgraph Avionics_Core ["AvionicsGuidanceAndControl"]
+        direction TB
+        FlightControllerCubeOrangePlus["FlightControllerCubeOrangePlus<br/>Cube orange+ and Software RTA<br/>• can1Master (INOUT)<br/>• can2Master (INOUT)<br/>• serialRpi (INOUT)<br/>• serialGnss (INOUT)<br/>• serialTrip6 (INOUT)<br/>• serialRadioAndUsbExt (INOUT)"]
+        DroneCanSurfaceActuation["DroneCanSurfaceActuation<br/>8x HV6160 and Splitter PCB<br/>• can1TailFins (INOUT)<br/>• can2SplitterIn (INOUT)<br/>• can2DaisyOutToSensors (INOUT)<br/>• servo8VIn (IN)"]
+        NavigationAndAirDataSuite["NavigationAndAirDataSuite<br/>Asterx GNSS 2x RM3100 Pitot<br/>• serialGnss (INOUT)<br/>• can2DaisyIn (INOUT)<br/>• sensorPowerIn (IN)"]
+        CompanionComputeRpiCm5["CompanionComputeRpiCm5<br/>RPI CM5004032 and OC Master<br/>• serialFc (INOUT)<br/>• ethSwitch (INOUT)<br/>• esadOcControl (INOUT)"]
+    end
+
+    subgraph Mission_Payload_ESAD ["MissionPayloadsCommsAndOrdnanceSafety"]
+        direction TB
+        OnboardEthernetAndC2RadioUnit["OnboardEthernetAndC2RadioUnit<br/>ETH Switch Ext Bd DTC Radio<br/>• radio12VIn (IN)<br/>• fcSerialAndUsbExt (INOUT)<br/>• ethRpiPort (INOUT)<br/>• ethTrip6Port (INOUT)<br/>• rfDatalinkOut (INOUT)"]
+        EoIrSeekerAndTrackerUnit["EoIrSeekerAndTrackerUnit<br/>Nighthawk2UZ and Trip6 EO-IR<br/>• gimbalPowerIn (IN)<br/>• serialFc (INOUT)<br/>• ethSwitch (INOUT)"]
+        ArtronEsadAndSensorUnit["ArtronEsadAndSensorUnit<br/>Artron ESAD Sensor Bd RBF 3<br/>• esad14VIn (IN)<br/>• ocControlIn (INOUT)<br/>• inertialSs1In (IN)"]
+    end
+
+    External_Actors ~~~ Ground_Segment
+    Ground_Segment ~~~ Air_Power_Prop
+    Air_Power_Prop ~~~ Avionics_Core
+    Avionics_Core ~~~ Mission_Payload_ESAD
+
+    Pilot -->|"EXT-01 Role Auth and Flight C2"| SwarmC2OperatorConsole
+    PayloadOperator -->|"EXT-02 Target and ESAD Auth"| SwarmC2OperatorConsole
+    LaunchAssistant -->|"EXT-03 Rail Prep and Dual Fire"| Pl40PneumaticLauncher
+    LaunchAssistant -->|"EXT-04 RBF 1-2-3 Safety Order"| PowerMeterAndRbfSwitch
+    ContestedEnv -->|"EXT-05 GNSS RF and Airspeed"| NavigationAndAirDataSuite
+    ContestedEnv -->|"EXT-06 Target Scene and Heat"| EoIrSeekerAndTrackerUnit
+
+    SwarmC2OperatorConsole -->|"CONN-22 Ground C2 and Fiber"| GroundRfStationAndAntennaTracker
+    OnboardEthernetAndC2RadioUnit -->|"CONN-21 4.4-5.0 GHz RF Link"| GroundRfStationAndAntennaTracker
+    Pl40PneumaticLauncher -->|"CONN-23 Mech Launch Zero Wire"| ElectricPropulsionUnit
+    MainBatteryAndFuseUnit -->|"CONN-01 36-50.4V DC 200A Bus"| PowerMeterAndRbfSwitch
+    PowerMeterAndRbfSwitch -->|"CONN-02 ESC Drive PWM and UART"| ElectricPropulsionUnit
+    PowerMeterAndRbfSwitch -->|"CONN-03 970cm Main DC Trunk"| ElectronicPowerSystemEps
+    ElectronicPowerSystemEps -->|"CONN-04 8V Servo Power Rail"| DroneCanSurfaceActuation
+    ElectronicPowerSystemEps -->|"CONN-06 14V ESAD Power Rail"| ArtronEsadAndSensorUnit
+    FlightControllerCubeOrangePlus -->|"CONN-11 CAN1 Tail Fins 1-4"| DroneCanSurfaceActuation
+    FlightControllerCubeOrangePlus -->|"CONN-15 UART FC to GNSS Rx"| NavigationAndAirDataSuite
+    FlightControllerCubeOrangePlus -->|"CONN-14 UART FC to RPI CM5"| CompanionComputeRpiCm5
+    FlightControllerCubeOrangePlus -->|"CONN-16 UART FC to Trip6"| EoIrSeekerAndTrackerUnit
+    FlightControllerCubeOrangePlus -->|"CONN-17 UART Radio and Ext USB"| OnboardEthernetAndC2RadioUnit
+    CompanionComputeRpiCm5 -->|"CONN-18 ETH Switch to RPI CM5"| OnboardEthernetAndC2RadioUnit
+    EoIrSeekerAndTrackerUnit -->|"CONN-19 ETH Switch to Trip6"| OnboardEthernetAndC2RadioUnit
+    CompanionComputeRpiCm5 -->|"CONN-20 RS-485 and DSC_IN1 Arm"| ArtronEsadAndSensorUnit
+    ElectricPropulsionUnit -->|"CONN-24 Inertial SS1 Accel"| ArtronEsadAndSensorUnit
