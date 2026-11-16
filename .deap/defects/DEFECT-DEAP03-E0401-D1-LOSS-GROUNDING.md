@@ -4,7 +4,12 @@
 - **Defect ID**: `DEFECT-DEAP03-E0401-D1-LOSS-GROUNDING`
 - **Severity**: Critical
 - **Pillar**: Test & Traceability Integrity
-- **Target Component**: `.deap/bin/verify-baseline` (`audit`, TQL-5 independent parser)
+- **Target Component**:
+  - `gintatkinson/deap03@e75d23d4`: `.deap/bin/verify-baseline` (`audit`, TQL-5 oracle)
+  - `gintatkinson/deap04@1db490b`: `blueprints/VERIFY_BASELINE_BLUEPRINT.md` (Sec 1.1 L20-33,
+    Sec 3.4 L141-158), `blueprints/RAAML_V1_SPECIFICATION.md` (Sec 2.2 L67-81, Sec 5.1
+    L187-240), `blueprints/SYSML_V2_SPECIFICATION.md` (Sec 2.2 L85-111)
+  - Flowdown: `crates/deap-tql5-oracle/src/oracle_parser.rs`, `crates/deap-verify-core`
 - **Labels**: `type::defect`, `status::open`, `safety::hazardous`, `assurance::ring1`,
   `verification::unit-test`
 
@@ -14,7 +19,8 @@
 - **Safety / Requirement Ref**: `L-01`..`L-03` (`H-01`..`H-05`; `SC-01`..`SC-07`;
   `REQ-01`..`REQ-07`)
 - **Standard Clause**: OMG SysML v2.0 / KerML 1.0, OMG RAAML v1.0 (`STPA::Loss`),
-  ISO/IEC/IEEE 29148 (`StakeholderConcern`), DO-330 `TQL-1` / `TQL-5` (`D1` grounding)
+  ISO/IEC/IEEE 29148 (`StakeholderConcern`), DO-330 `TQL-1` / `TQL-5` (`D1` grounding),
+  `deap04` `VERIFY_BASELINE_BLUEPRINT.md` Sec 1.1 & Sec 3.4
 
 ## 3. Minimal Deterministic Reproducer
 1. Preconditions and sealed IR baseline:
@@ -89,10 +95,10 @@
      satisfies the `TQL-5` `D1` check.
    - **Why 5 (Root Cause)**: Divergence inside `verify-baseline`'s own `D1` evaluator over
      an otherwise bit-identical `CanonicalIr` (`h_merkle` / `h_ops` pass `DEAP_E0531`):
-     `compile-sysml` (`TQL-1`) resolves `D1` via `PreStpaOps` concerns/actors/references,
-     whereas `verify-baseline audit` (`TQL-5`) omits `'references'` edges in its slice graph
-     and fails to accept `Specializes`, `allocate`, `satisfy`, or `stakeholderRef` `D1`
-     grounding paths.
+     `compile-sysml` (`TQL-1`) relies on non-standard `'references'` metadata slots instead of
+     pure SysML v2 relations, whereas `verify-baseline` (`TQL-5`) omits `'references'` edges
+     in its slice graph while `RAAML_V1_SPECIFICATION.md` / `VERIFY_BASELINE_BLUEPRINT.md`
+     fail to pin one canonical `D1` SysML v2 edge syntax shared across `TQL-1` and `TQL-5`.
 2. **Boundary & Invariant Violated**:
    - **Assurance Boundary**: `DO-330 TQL-1` (`compile-sysml` Pass 1 `D1`) vs `DO-330 TQL-5`
      (`verify-baseline audit`) `D1` evaluator equivalence over bit-identical `CanonicalIr`.
@@ -106,13 +112,17 @@
   without bypassing the hook until upstream `verify-baseline` `D1` parity is restored.
 
 ## 7. Proposed Upstream Fix & Verification Test
-1. **Minimal Surgical Upstream Fix**:
-   - Align `.deap/bin/verify-baseline` (`TQL-5` independent parser and `D1` checker) with
-     `ingest-sysml` / `compile-sysml` (`TQL-1`) so `concern` nodes and single-quoted
-     `'references'` / `stakeholderRef` / `Specializes` (`:>`) paths on `@RAAML::STPA::Loss`
-     resolve identically across both `TQL-1` and `TQL-5`.
+1. **Minimal Surgical Upstream Fix (`deap04` Blueprints -> `TQL-1` & `TQL-5` Parity)**:
+   - Update `RAAML_V1_SPECIFICATION.md`, `SYSML_V2_SPECIFICATION.md`, and
+     `VERIFY_BASELINE_BLUEPRINT.md` Sec 3.4 to standardize `D1..D6` on pure SysML v2 relations
+     (`Specializes` `:>`, `satisfy`, `allocate`, `stakeholder ... subsets`, `@Loss.stakeholderRef`)
+     with zero dependence on non-standard single-quoted `'references'` string-slot hacks.
+   - Align `deap-tql5-oracle` (`oracle_parser.rs`) / `deap-verify-core` (`TQL-5`) and
+     `TQL-1` so `concern` classification and `D1` loss-to-concern resolution produce identical
+     accept/reject verdicts over identical `CanonicalIr`.
    - Preserve fail-closed `DEAP_E0401` when neither `Specializes`, `stakeholder ... subsets`,
-     nor `@RAAML::STPA::Loss.stakeholderRef` / `'references'` targets a valid concern or actor.
+     `satisfy`, `allocate`, nor `@RAAML::STPA::Loss.stakeholderRef` targets a valid concern
+     or actor.
 2. **TDD Regression Test & Verification Assertions**:
    - Assert both `compile-sysml check` and `verify-baseline audit` exit `0` on Avenger 5
      `schema/` and reject a negative fixture with unknown `stakeholderRef` (`exit 13`).
