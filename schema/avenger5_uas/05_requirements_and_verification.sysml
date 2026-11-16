@@ -9,49 +9,49 @@ package Avenger5_Verification {
   requirement def REQ01_EsadRbfPowerSequenceInterlock :> RAAML::LifecycleAssuranceObjective {
     doc /* ESAD RBF #3 MUST remain installed until Power RBF #2 is pulled, UAV + ESAD boot cleanly, and SwarmC2 completes PBIT [A5 Prep#p23]. */
     @RAAML::ThreeRing::DocTier { tier = DocTierKind::Tier4Spec; docPath = "docs/safety"; }
-    @RAAML::ThreeRing::TraceReq { reqId = "REQ-01"; rationale = "Closes H-01, UCA-01, SC-01, and STANAG 4187 power-on interlock integrity."; }
+    @RAAML::ThreeRing::TraceReq { reqId = "REQ-01"; rationale = "Closes H-01, UCA-02..UCA-03, SC-01, and STANAG 4187 power-on interlock integrity."; }
     subject sys : Avenger5_Architecture::Avenger5UasSystem;
   }
 
   requirement def REQ02_EsadSafeSeparationAndDscGate :> RAAML::LifecycleAssuranceObjective {
     doc /* ESAD MUST keep HV < 50 V and reject DSC_IN1 (1 kHz 2-pulse) / RS-485 Arm Enable until Umbilical open (SS1) and Safe Distance Exceeded (SS2) [ESAD ICD#p14-p23]. */
     @RAAML::ThreeRing::DocTier { tier = DocTierKind::Tier4Spec; docPath = "docs/safety"; }
-    @RAAML::ThreeRing::TraceReq { reqId = "REQ-02"; rationale = "Closes H-01, UCA-02, SC-02, FaultStates bit 4 & bit 12 invariants."; }
+    @RAAML::ThreeRing::TraceReq { reqId = "REQ-02"; rationale = "Closes H-01, UCA-09..UCA-12, SC-02, FaultStates bit 4 & bit 12 invariants."; }
     subject sys : Avenger5_Architecture::Avenger5UasSystem;
   }
 
   requirement def REQ03_Pl40PneumaticAndStallMarginGate :> RAAML::LifecycleAssuranceObjective {
     doc /* PL-40 launch MUST verify 13-14 bar pressure, exit velocity <= 25 m/s, rear-folded props, carriage pin state, and dual switches >= 2 s [PL-40#p24-p26; GAP-03]. */
     @RAAML::ThreeRing::DocTier { tier = DocTierKind::Tier4Spec; docPath = "docs/safety"; }
-    @RAAML::ThreeRing::TraceReq { reqId = "REQ-03"; rationale = "Closes H-02, UCA-03, SC-03 across catapult-airframe mating envelope."; }
+    @RAAML::ThreeRing::TraceReq { reqId = "REQ-03"; rationale = "Closes H-01, H-02, UCA-05..UCA-08, SC-03 across catapult-airframe mating envelope."; }
     subject sys : Avenger5_Architecture::Avenger5UasSystem;
   }
 
   requirement def REQ04_DroneCanSeriesChainSupervision :> RAAML::LifecycleAssuranceObjective {
     doc /* Cube orange+ MUST supervise CAN 1 and CAN 2 series daisy-chain heartbeats (wing servos #5-#8, dual RM3100, SKYE2) with <= 20 ms FTTI [Block Diagram#p1]. */
     @RAAML::ThreeRing::DocTier { tier = DocTierKind::Tier4Spec; docPath = "docs/safety"; }
-    @RAAML::ThreeRing::TraceReq { reqId = "REQ-04"; rationale = "Closes H-03, UCA-04, SC-04 across CAN 2 single-string dependency."; }
+    @RAAML::ThreeRing::TraceReq { reqId = "REQ-04"; rationale = "Closes H-03, UCA-17..UCA-20, SC-04 across CAN 2 single-string dependency."; }
     subject sys : Avenger5_Architecture::Avenger5UasSystem;
   }
 
   requirement def REQ05_TerminalApproachAirspeedAndAbort :> RAAML::LifecycleAssuranceObjective {
     doc /* Nom_TerminalApproach mode MUST enforce <= 55 m/s speed limit, 2-5 s EO track hold, <= 15 deg elevation, and deterministic Abort Approach / 5 s Abort hold [A5 Manual#p84-p90]. */
     @RAAML::ThreeRing::DocTier { tier = DocTierKind::Tier4Spec; docPath = "docs/safety"; }
-    @RAAML::ThreeRing::TraceReq { reqId = "REQ-05"; rationale = "Closes H-02, UCA-05, SC-05 terminal seeker tracking and waveoff bounds."; }
+    @RAAML::ThreeRing::TraceReq { reqId = "REQ-05"; rationale = "Closes H-01, H-02, UCA-13..UCA-16, SC-05 terminal seeker tracking and waveoff bounds."; }
     subject sys : Avenger5_Architecture::Avenger5UasSystem;
   }
 
   requirement def REQ06_Eps14VEsadRailAndRs485Watchdog :> RAAML::LifecycleAssuranceObjective {
     doc /* EPS 14 V ESAD rail MUST maintain >= 14.0 V under transient load (GAP-01) and RPI RS-485 master MUST maintain 100 Hz polling with <= 5 ms reply [ESAD ICD#p14-p15]. */
     @RAAML::ThreeRing::DocTier { tier = DocTierKind::Tier4Spec; docPath = "docs/interfaces"; }
-    @RAAML::ThreeRing::TraceReq { reqId = "REQ-06"; rationale = "Closes H-05, UCA-06, SC-06 across EPS-to-ESAD J100 and RS-485 bus."; }
+    @RAAML::ThreeRing::TraceReq { reqId = "REQ-06"; rationale = "Closes H-05, UCA-01, UCA-04, SC-06 across EPS-to-ESAD J100 and RS-485 bus."; }
     subject sys : Avenger5_Architecture::Avenger5UasSystem;
   }
 
   requirement def REQ07_GeofenceGnssSpoofAndPreLaunchScrub :> RAAML::LifecycleAssuranceObjective {
     doc /* System MUST enforce polygon Inclusion/Exclusion geofences, INS GNSS-denied fallback, and pre-launch scrub/hangfire safeing SOP (OA-08) [GAP-05]. */
     @RAAML::ThreeRing::DocTier { tier = DocTierKind::Tier4Spec; docPath = "docs/use-cases"; }
-    @RAAML::ThreeRing::TraceReq { reqId = "REQ-07"; rationale = "Closes H-04, UCA-07, SC-07, EMG-04..EMG-06, and JARUS SORA containment OSOs."; }
+    @RAAML::ThreeRing::TraceReq { reqId = "REQ-07"; rationale = "Closes H-04, UCA-21..UCA-24, SC-07, EMG-04..EMG-06, and JARUS SORA containment OSOs."; }
     subject sys : Avenger5_Architecture::Avenger5UasSystem;
   }
 
@@ -142,7 +142,7 @@ package Avenger5_Verification {
   requirement req01 : REQ01_EsadRbfPowerSequenceInterlock {
     doc /* Enforce ESAD RBF #3 retention until Power RBF #2 removal and clean SwarmC2 PBIT completion [A5 Prep#p23]. */
     @RAAML::ThreeRing::DocTier { tier = DocTierKind::Tier4Spec; docPath = "docs/safety"; }
-    @RAAML::ThreeRing::TraceReq { reqId = "REQ-01"; rationale = "Closes H-01, UCA-01, SC-01, and STANAG 4187 power-on interlock integrity."; }
+    @RAAML::ThreeRing::TraceReq { reqId = "REQ-01"; rationale = "Closes H-01, UCA-02..UCA-03, SC-01, and STANAG 4187 power-on interlock integrity."; }
     subject sys subsets Avenger5_Architecture::avenger5System;
     satisfy lao01;
   }
@@ -150,7 +150,7 @@ package Avenger5_Verification {
   requirement req02 : REQ02_EsadSafeSeparationAndDscGate {
     doc /* Hold ESAD HV < 50 V and inhibit DSC_IN1 / RS-485 Arm Enable until SS1 umbilical open and SS2 safe separation [ESAD ICD#p14-p23]. */
     @RAAML::ThreeRing::DocTier { tier = DocTierKind::Tier4Spec; docPath = "docs/safety"; }
-    @RAAML::ThreeRing::TraceReq { reqId = "REQ-02"; rationale = "Closes H-01, UCA-02, SC-02, FaultStates bit 4 & bit 12 invariants."; }
+    @RAAML::ThreeRing::TraceReq { reqId = "REQ-02"; rationale = "Closes H-01, UCA-09..UCA-12, SC-02, FaultStates bit 4 & bit 12 invariants."; }
     subject sys subsets Avenger5_Architecture::avenger5System;
     satisfy lao02;
   }
@@ -158,7 +158,7 @@ package Avenger5_Verification {
   requirement req03 : REQ03_Pl40PneumaticAndStallMarginGate {
     doc /* Validate PL-40 pressure 13-14 bar, exit velocity <= 25 m/s, rear-folded props, pin cleared, and >= 2 s dual switch hold [PL-40#p24-p26]. */
     @RAAML::ThreeRing::DocTier { tier = DocTierKind::Tier4Spec; docPath = "docs/safety"; }
-    @RAAML::ThreeRing::TraceReq { reqId = "REQ-03"; rationale = "Closes H-02, UCA-03, SC-03 across catapult-airframe mating envelope."; }
+    @RAAML::ThreeRing::TraceReq { reqId = "REQ-03"; rationale = "Closes H-01, H-02, UCA-05..UCA-08, SC-03 across catapult-airframe mating envelope."; }
     subject sys subsets Avenger5_Architecture::avenger5System;
     satisfy lao03;
   }
@@ -166,7 +166,7 @@ package Avenger5_Verification {
   requirement req04 : REQ04_DroneCanSeriesChainSupervision {
     doc /* Supervise Cube orange+ CAN 1 and CAN 2 daisy-chain heartbeats (servos, RM3100, SKYE2) within <= 20 ms FTTI [Block Diagram#p1]. */
     @RAAML::ThreeRing::DocTier { tier = DocTierKind::Tier4Spec; docPath = "docs/safety"; }
-    @RAAML::ThreeRing::TraceReq { reqId = "REQ-04"; rationale = "Closes H-03, UCA-04, SC-04 across CAN 2 single-string dependency."; }
+    @RAAML::ThreeRing::TraceReq { reqId = "REQ-04"; rationale = "Closes H-03, UCA-17..UCA-20, SC-04 across CAN 2 single-string dependency."; }
     subject sys subsets Avenger5_Architecture::avenger5System;
     satisfy lao04;
   }
@@ -174,7 +174,7 @@ package Avenger5_Verification {
   requirement req05 : REQ05_TerminalApproachAirspeedAndAbort {
     doc /* Enforce <= 55 m/s speed cap, 2-5 s track hold, <= 15 deg pitch, and deterministic Abort Approach / 5 s Abort hold [A5 Manual#p84-p90]. */
     @RAAML::ThreeRing::DocTier { tier = DocTierKind::Tier4Spec; docPath = "docs/safety"; }
-    @RAAML::ThreeRing::TraceReq { reqId = "REQ-05"; rationale = "Closes H-02, UCA-05, SC-05 terminal seeker tracking and waveoff bounds."; }
+    @RAAML::ThreeRing::TraceReq { reqId = "REQ-05"; rationale = "Closes H-01, H-02, UCA-13..UCA-16, SC-05 terminal seeker tracking and waveoff bounds."; }
     subject sys subsets Avenger5_Architecture::avenger5System;
     satisfy lao05;
   }
@@ -182,7 +182,7 @@ package Avenger5_Verification {
   requirement req06 : REQ06_Eps14VEsadRailAndRs485Watchdog {
     doc /* Sustain EPS J100 rail >= 14.0 V under transient load and run RPI RS-485 polling at 100 Hz with <= 5 ms reply [ESAD ICD#p14-p15]. */
     @RAAML::ThreeRing::DocTier { tier = DocTierKind::Tier4Spec; docPath = "docs/interfaces"; }
-    @RAAML::ThreeRing::TraceReq { reqId = "REQ-06"; rationale = "Closes H-05, UCA-06, SC-06 across EPS-to-ESAD J100 and RS-485 bus."; }
+    @RAAML::ThreeRing::TraceReq { reqId = "REQ-06"; rationale = "Closes H-05, UCA-01, UCA-04, SC-06 across EPS-to-ESAD J100 and RS-485 bus."; }
     subject sys subsets Avenger5_Architecture::avenger5System;
     satisfy lao06;
   }
@@ -190,7 +190,7 @@ package Avenger5_Verification {
   requirement req07 : REQ07_GeofenceGnssSpoofAndPreLaunchScrub {
     doc /* Enforce polygon Exclusion/Inclusion geofences, INS GNSS-denied fallback, and OA-08 pre-launch scrub safeing SOP [GAP-05]. */
     @RAAML::ThreeRing::DocTier { tier = DocTierKind::Tier4Spec; docPath = "docs/use-cases"; }
-    @RAAML::ThreeRing::TraceReq { reqId = "REQ-07"; rationale = "Closes H-04, UCA-07, SC-07, EMG-04..EMG-06, and JARUS SORA containment OSOs."; }
+    @RAAML::ThreeRing::TraceReq { reqId = "REQ-07"; rationale = "Closes H-04, UCA-21..UCA-24, SC-07, EMG-04..EMG-06, and JARUS SORA containment OSOs."; }
     subject sys subsets Avenger5_Architecture::avenger5System;
     satisfy lao07;
   }

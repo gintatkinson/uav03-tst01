@@ -1,6 +1,6 @@
 # Concept of Operations (ConOps)
 
-**Operational Slice Digest (0x20 h_ops):** `703e3de6ade2a20c484129acf15c0cfc791e8fc049cc62321f0c89893320f2e5` \| **ICD Digest (0x21 icd_pre_sha256):** `4c7c387ab22bc79c0292e5441b08ee0e21934afc227ba775dd82841646b2356a`
+**Operational Slice Digest (0x20 h_ops):** `604b31026adcba4c5ba400775a1f98625958518bdb0eb84b4a26734697b84cb0` \| **ICD Digest (0x21 icd_pre_sha256):** `4c7c387ab22bc79c0292e5441b08ee0e21934afc227ba775dd82841646b2356a`
 
 ## 1\. System Context and Boundary Framing
 

@@ -86,8 +86,23 @@ package Avenger5_Architecture {
     in item launchFlow : PneumaticImpulseItem;
   }
 
-  concern def StakeholderConcern {
+  concern def StakeholderConcern :> RAAML::LifecycleAssuranceObjective {
     doc /* Stakeholder safety, airworthiness, and operational boundary concern per ISO/IEC/IEEE 29148. */
+  }
+
+  concern scLaunchCrewZeroInadvertentEnable : StakeholderConcern {
+    doc /* Launch crew and range safety authority require positive two-stage RBF and safe-separation interlocks preventing uncommanded HV activation. */
+    stakeholder crew subsets Avenger5_Architecture::launchCrew;
+  }
+
+  concern scAirworthinessContainment : StakeholderConcern {
+    doc /* Airworthiness regulator requires polygon geofence containment, stall/overspeed margin protection, and bounded lost-link RTL behavior. */
+    stakeholder pilotActor subsets Avenger5_Architecture::pilot;
+  }
+
+  concern scPayloadContinuityAssurance : StakeholderConcern {
+    doc /* Mission payload operator requires controlled payload continuity, telemetry integrity, and deterministic abort safeing. */
+    stakeholder payActor subsets Avenger5_Architecture::payloadOp;
   }
 
   part def GcsPilotOperator :> RAAML::ExternalActor {
@@ -485,16 +500,6 @@ package Avenger5_Architecture {
 
     out port toPayloadHvOut : ~DiscreteInterlockPort;
     in port fromPayloadStatIn : DiscreteInterlockPort;
-
-    concern scLaunchCrewZeroInadvertentEnable : StakeholderConcern {
-      doc /* Launch crew and range safety authority require positive two-stage RBF and safe-separation interlocks preventing uncommanded HV activation. */
-      stakeholder crew subsets launchCrew;
-    }
-    concern scAirworthinessContainment : StakeholderConcern {
-      doc /* Airworthiness regulator requires polygon geofence containment, stall/overspeed margin protection, and bounded lost-link RTL behavior. */
-      stakeholder pilotActor subsets pilot;
-      stakeholder payActor subsets payloadOp;
-    }
 
     part envelopes : Avenger5_Quantities::GroundedPlatformEnvelope;
 

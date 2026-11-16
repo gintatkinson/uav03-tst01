@@ -1,6 +1,6 @@
 # Mission Intent and Mission Essential Task List (METL)
 
-**Operational Slice Digest (0x20 h_ops):** `703e3de6ade2a20c484129acf15c0cfc791e8fc049cc62321f0c89893320f2e5` \| **Stratum:** `PreStpaOps (pi_op)`
+**Operational Slice Digest (0x20 h_ops):** `604b31026adcba4c5ba400775a1f98625958518bdb0eb84b4a26734697b84cb0` \| **Stratum:** `PreStpaOps (pi_op)`
 
 ## 1\. Stakeholder Concerns Traceability
 
@@ -8,8 +8,9 @@ Pre-STPA stakeholder concerns framing operational authority, determinism, and ai
 
 |Concern ID|Qualified Name|Stakeholders|
 |:---------|:-------------|:-----------|
-|`scAirworthinessContainment`|`Avenger5_Architecture::avenger5System::scAirworthinessContainment`|payloadOp, pilot|
-|`scLaunchCrewZeroInadvertentEnable`|`Avenger5_Architecture::avenger5System::scLaunchCrewZeroInadvertentEnable`|launchCrew|
+|`scAirworthinessContainment`|`Avenger5_Architecture::scAirworthinessContainment`|pilot|
+|`scLaunchCrewZeroInadvertentEnable`|`Avenger5_Architecture::scLaunchCrewZeroInadvertentEnable`|launchCrew|
+|`scPayloadContinuityAssurance`|`Avenger5_Architecture::scPayloadContinuityAssurance`|payloadOp|
 
 ## 2\. Quantitative Mission Essential Task List (METL)
 
