@@ -1,0 +1,1231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "schematic_ledger_schema.json",
+  "title": "Schematic Ingestion Ledger Schema",
+  "description": "Strict domain-neutral JSON Schema Draft 2020-12 contract for extracted OEM schematic ledgers and per-document shards.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source_documents",
+    "enclosures",
+    "component_types",
+    "component_instances",
+    "wires",
+    "unconnected_or_spare_pins",
+    "protocol_and_register_contracts",
+    "state_machines_and_procedures",
+    "functional_invariants",
+    "cross_document_reconciliations"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "source_documents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/source_document"
+      }
+    },
+    "enclosures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/enclosure"
+      }
+    },
+    "component_types": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/component_type"
+      }
+    },
+    "component_instances": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/component_instance"
+      }
+    },
+    "wires": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/wire"
+      }
+    },
+    "unconnected_or_spare_pins": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/unconnected_pin"
+      }
+    },
+    "protocol_and_register_contracts": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/protocol_contract"
+      }
+    },
+    "state_machines_and_procedures": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/state_machine_or_procedure"
+      }
+    },
+    "functional_invariants": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/functional_invariant"
+      }
+    },
+    "cross_document_reconciliations": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "#/$defs/cross_document_reconciliation"
+      }
+    }
+  },
+  "$defs": {
+    "document_shard": {
+      "description": "Single-PDF extraction shard validated against identical field contracts prior to text-only ledger merge.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "source_documents",
+        "enclosures",
+        "component_types",
+        "component_instances",
+        "wires",
+        "unconnected_or_spare_pins",
+        "protocol_and_register_contracts",
+        "state_machines_and_procedures",
+        "functional_invariants",
+        "cross_document_reconciliations"
+      ],
+      "properties": {
+        "schema_version": {
+          "type": "integer",
+          "const": 1
+        },
+        "source_documents": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "items": {
+            "$ref": "#/$defs/source_document"
+          }
+        },
+        "enclosures": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/enclosure"
+          }
+        },
+        "component_types": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/component_type"
+          }
+        },
+        "component_instances": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/component_instance"
+          }
+        },
+        "wires": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/wire"
+          }
+        },
+        "unconnected_or_spare_pins": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/unconnected_pin"
+          }
+        },
+        "protocol_and_register_contracts": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/protocol_contract"
+          }
+        },
+        "state_machines_and_procedures": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/state_machine_or_procedure"
+          }
+        },
+        "functional_invariants": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/functional_invariant"
+          }
+        },
+        "cross_document_reconciliations": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/cross_document_reconciliation"
+          }
+        }
+      }
+    },
+    "identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "upper_camel_case": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Z][A-Za-z0-9]*$"
+    },
+    "lower_camel_case": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-z][A-Za-z0-9]*$"
+    },
+    "sysml_identifier": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*$"
+    },
+    "functional_category": {
+      "type": "string",
+      "enum": [
+        "energy_storage",
+        "circuit_protection",
+        "power_switch_meter",
+        "power_distribution_regulator",
+        "primary_controller",
+        "companion_computer",
+        "network_switch",
+        "splitter_distribution_pcb",
+        "rf_transceiver",
+        "passive_antenna",
+        "gnss_receiver",
+        "navigation_sensor",
+        "airdata_sensor",
+        "electro_optical_gimbal",
+        "payload_compute_module",
+        "electromechanical_actuator",
+        "safe_arm_controller",
+        "proximity_impact_sensor",
+        "energetic_payload",
+        "pyrotechnic_actuator",
+        "safety_interlock_key",
+        "external_service_interface",
+        "mechanical_launch_structure",
+        "pneumatic_compressor_unit",
+        "operator_trigger_unit",
+        "operator_console",
+        "antenna_positioner",
+        "esd_grounding_fixture"
+      ]
+    },
+    "power_feed_mode": {
+      "type": "string",
+      "enum": [
+        "self_energy_source",
+        "dedicated_power_port",
+        "in_band_signal_or_composite_cable",
+        "none_passive_or_mechanical"
+      ]
+    },
+    "wire_domain": {
+      "type": "string",
+      "enum": [
+        "dc_power",
+        "ac_multiphase",
+        "can_bus",
+        "uart_serial",
+        "rs485_differential",
+        "usb_bus",
+        "ethernet_ip",
+        "pwm_control",
+        "discrete_gpio",
+        "umbilical_continuity_loop",
+        "composite_power_video",
+        "composite_sensor_harness",
+        "high_voltage_fire",
+        "rf_coax",
+        "rf_over_the_air",
+        "optical_fiber",
+        "pneumatic_pressure",
+        "mechanical_structural_load",
+        "inertial_acceleration"
+      ]
+    },
+    "source_document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "doc_id",
+        "relative_path",
+        "file_size_bytes",
+        "page_count",
+        "inspected_pages"
+      ],
+      "properties": {
+        "doc_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "relative_path": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[^/\\\\].+$",
+          "not": {
+            "pattern": "^[A-Za-z]:"
+          }
+        },
+        "file_size_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "page_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "inspected_pages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "source_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "doc_id",
+        "page",
+        "locator"
+      ],
+      "properties": {
+        "doc_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "reconciliation_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "doc_id",
+        "page",
+        "locator"
+      ],
+      "properties": {
+        "doc_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stated_claim": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "enclosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enclosure_id",
+        "canonical_part_def",
+        "canonical_instance_name",
+        "oem_exact_label",
+        "parent_enclosure_id",
+        "boundary_placement",
+        "cardinality",
+        "populated_in_production",
+        "source_ref"
+      ],
+      "properties": {
+        "enclosure_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "canonical_part_def": {
+          "$ref": "#/$defs/upper_camel_case"
+        },
+        "canonical_instance_name": {
+          "type": ["string", "null"],
+          "minLength": 1,
+          "pattern": "^[a-z][A-Za-z0-9]*$"
+        },
+        "oem_exact_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent_enclosure_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/identifier"
+            }
+          ]
+        },
+        "boundary_placement": {
+          "type": "string",
+          "enum": [
+            "interior",
+            "boundary_straddling",
+            "external_segment"
+          ]
+        },
+        "cardinality": {
+          "type": "string",
+          "enum": [
+            "1",
+            "0..1"
+          ]
+        },
+        "populated_in_production": {
+          "type": "boolean"
+        },
+        "source_ref": {
+          "$ref": "#/$defs/source_ref"
+        }
+      },
+      "if": {
+        "properties": {
+          "parent_enclosure_id": {
+            "type": "string"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "canonical_instance_name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "declared_port": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "port_name",
+        "port_def_name",
+        "direction",
+        "domain",
+        "protocol_or_electrical_spec",
+        "is_power_input",
+        "is_power_output"
+      ],
+      "properties": {
+        "port_name": {
+          "$ref": "#/$defs/lower_camel_case"
+        },
+        "port_def_name": {
+          "$ref": "#/$defs/upper_camel_case"
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "in",
+            "out",
+            "inout"
+          ]
+        },
+        "domain": {
+          "$ref": "#/$defs/wire_domain"
+        },
+        "protocol_or_electrical_spec": {
+          "type": "string",
+          "minLength": 1
+        },
+        "is_power_input": {
+          "type": "boolean"
+        },
+        "is_power_output": {
+          "type": "boolean"
+        }
+      }
+    },
+    "parametric_attribute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "attribute_name",
+        "sysml_type",
+        "value",
+        "si_unit",
+        "oem_raw_value_and_unit",
+        "source_ref"
+      ],
+      "properties": {
+        "attribute_name": {
+          "$ref": "#/$defs/lower_camel_case"
+        },
+        "sysml_type": {
+          "type": "string",
+          "enum": [
+            "Real",
+            "Integer",
+            "Boolean",
+            "String"
+          ]
+        },
+        "value": {
+          "type": [
+            "number",
+            "integer",
+            "boolean",
+            "string"
+          ]
+        },
+        "si_unit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "oem_raw_value_and_unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_ref": {
+          "$ref": "#/$defs/source_ref"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "sysml_type": {
+                "const": "Real"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "sysml_type": {
+                "const": "Integer"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "sysml_type": {
+                "const": "Boolean"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "sysml_type": {
+                "const": "String"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "component_type": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type_id",
+        "canonical_part_def",
+        "oem_model_or_label",
+        "functional_category",
+        "co_packaged_functions",
+        "requires_electrical_power",
+        "power_feed_mode",
+        "declared_ports",
+        "parametric_attributes",
+        "source_ref"
+      ],
+      "properties": {
+        "type_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "canonical_part_def": {
+          "$ref": "#/$defs/upper_camel_case"
+        },
+        "oem_model_or_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "functional_category": {
+          "$ref": "#/$defs/functional_category"
+        },
+        "co_packaged_functions": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "requires_electrical_power": {
+          "type": "boolean"
+        },
+        "power_feed_mode": {
+          "$ref": "#/$defs/power_feed_mode"
+        },
+        "declared_ports": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/declared_port"
+          }
+        },
+        "parametric_attributes": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/parametric_attribute"
+          }
+        },
+        "source_ref": {
+          "$ref": "#/$defs/source_ref"
+        }
+      }
+    },
+    "component_instance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instance_id",
+        "canonical_instance_name",
+        "type_id",
+        "oem_instance_label",
+        "parent_enclosure_id",
+        "populated_in_production",
+        "instance_attributes",
+        "source_ref"
+      ],
+      "properties": {
+        "instance_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "canonical_instance_name": {
+          "$ref": "#/$defs/lower_camel_case"
+        },
+        "type_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "oem_instance_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent_enclosure_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "populated_in_production": {
+          "type": "boolean"
+        },
+        "instance_attributes": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/parametric_attribute"
+          }
+        },
+        "source_ref": {
+          "$ref": "#/$defs/source_ref"
+        }
+      }
+    },
+    "wire_endpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instance_id",
+        "port_name",
+        "connector_or_pin_ref"
+      ],
+      "properties": {
+        "instance_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "port_name": {
+          "$ref": "#/$defs/lower_camel_case"
+        },
+        "connector_or_pin_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    },
+    "wire": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wire_id",
+        "oem_wire_label",
+        "domain",
+        "topology",
+        "direction",
+        "from_endpoint",
+        "to_endpoint",
+        "series_chain_id",
+        "series_hop_index",
+        "nominal_voltage_v",
+        "voltage_range_v",
+        "harness_length_m",
+        "conductor_count",
+        "active_in_production",
+        "source_ref"
+      ],
+      "properties": {
+        "wire_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "oem_wire_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "domain": {
+          "$ref": "#/$defs/wire_domain"
+        },
+        "topology": {
+          "type": "string",
+          "enum": [
+            "point_to_point",
+            "multi_drop_trunk",
+            "star_stub",
+            "series_daisy_hop"
+          ]
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "unidirectional",
+            "bidirectional"
+          ]
+        },
+        "from_endpoint": {
+          "$ref": "#/$defs/wire_endpoint"
+        },
+        "to_endpoint": {
+          "$ref": "#/$defs/wire_endpoint"
+        },
+        "series_chain_id": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/identifier"
+            }
+          ]
+        },
+        "series_hop_index": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "nominal_voltage_v": {
+          "type": [
+            "number",
+            "null"
+          ]
+        },
+        "voltage_range_v": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "items": false,
+              "minItems": 2,
+              "maxItems": 2
+            }
+          ]
+        },
+        "harness_length_m": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "conductor_count": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        },
+        "active_in_production": {
+          "type": "boolean"
+        },
+        "source_ref": {
+          "$ref": "#/$defs/source_ref"
+        }
+      },
+      "if": {
+        "properties": {
+          "topology": {
+            "const": "series_daisy_hop"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "series_chain_id": {
+            "type": "string"
+          },
+          "series_hop_index": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "series_chain_id": {
+            "type": "null"
+          },
+          "series_hop_index": {
+            "type": "null"
+          }
+        }
+      }
+    },
+    "unconnected_pin": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "instance_id",
+        "connector_id",
+        "pin_designator",
+        "signal_name",
+        "disposition",
+        "source_ref"
+      ],
+      "properties": {
+        "instance_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "connector_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pin_designator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "signal_name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "disposition": {
+          "type": "string",
+          "const": "documented_spare_unconnected"
+        },
+        "source_ref": {
+          "$ref": "#/$defs/source_ref"
+        }
+      }
+    },
+    "framing_and_timing_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "summary"
+      ],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baud_or_bit_rate_bps": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "frame_format": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "poll_or_update_rate_hz": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "timeout_ms": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "discrete_waveform_spec": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    },
+    "checksum_integrity_spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scheme"
+      ],
+      "properties": {
+        "scheme": {
+          "type": "string",
+          "minLength": 1
+        },
+        "polynomial_or_formula": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "seed_or_init": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "bit_width": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1
+        }
+      }
+    },
+    "command_or_bitfield": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identifier",
+        "kind",
+        "description"
+      ],
+      "properties": {
+        "identifier": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "command",
+            "telemetry_message",
+            "register",
+            "bitfield",
+            "fault_flag",
+            "discrete_signal"
+          ]
+        },
+        "opcode_or_address": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "bit_offset_or_width": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "units_or_encoding": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "protocol_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_id",
+        "wire_or_interface_ref",
+        "framing_and_timing",
+        "checksum_or_integrity",
+        "commands_and_bitfields",
+        "source_ref"
+      ],
+      "properties": {
+        "contract_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "wire_or_interface_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "framing_and_timing": {
+          "$ref": "#/$defs/framing_and_timing_spec"
+        },
+        "checksum_or_integrity": {
+          "$ref": "#/$defs/checksum_integrity_spec"
+        },
+        "commands_and_bitfields": {
+          "type": "array",
+          "minItems": 0,
+          "items": {
+            "$ref": "#/$defs/command_or_bitfield"
+          }
+        },
+        "source_ref": {
+          "$ref": "#/$defs/source_ref"
+        }
+      }
+    },
+    "state_transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from_state",
+        "trigger_and_guard",
+        "to_state"
+      ],
+      "properties": {
+        "transition_name": {
+          "$ref": "#/$defs/sysml_identifier"
+        },
+        "from_state": {
+          "$ref": "#/$defs/sysml_identifier"
+        },
+        "trigger_and_guard": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to_state": {
+          "$ref": "#/$defs/sysml_identifier"
+        },
+        "effect": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      }
+    },
+    "state_machine_or_procedure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fsm_id",
+        "owner_enclosure_or_type_id",
+        "states",
+        "transitions",
+        "source_ref"
+      ],
+      "properties": {
+        "fsm_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "owner_enclosure_or_type_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "states": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/sysml_identifier"
+          }
+        },
+        "transitions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/state_transition"
+          }
+        },
+        "source_ref": {
+          "$ref": "#/$defs/source_ref"
+        }
+      }
+    },
+    "functional_invariant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "invariant_id",
+        "subject_id",
+        "category",
+        "formal_statement",
+        "sysml_realization_kind",
+        "source_ref"
+      ],
+      "properties": {
+        "invariant_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "subject_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "kinematic_control_law",
+            "sensor_fusion_coupling",
+            "interlock_sequence",
+            "power_margin",
+            "failsafe_behavior",
+            "configuration_exclusion"
+          ]
+        },
+        "formal_statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sysml_realization_kind": {
+          "type": "string",
+          "enum": [
+            "constraint_def",
+            "requirement_def",
+            "state_def",
+            "action_def"
+          ]
+        },
+        "source_ref": {
+          "$ref": "#/$defs/source_ref"
+        }
+      }
+    },
+    "cross_document_reconciliation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gap_id",
+        "summary",
+        "source_a",
+        "source_b",
+        "authoritative_disposition"
+      ],
+      "properties": {
+        "gap_id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_a": {
+          "$ref": "#/$defs/reconciliation_source"
+        },
+        "source_b": {
+          "$ref": "#/$defs/reconciliation_source"
+        },
+        "authoritative_disposition": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
