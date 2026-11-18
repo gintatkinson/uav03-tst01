@@ -2,16 +2,16 @@
 
 ## 1. Objective & Single Atomic Scope
 
-Prove a deterministic, domain-neutral **OEM Schematic-to-SysML v2 Ingestion & Blind Verification Architecture** inside `./` (`gintatkinson/uav03-tst01`) that produces a 100% hardware-faithful architectural model (`schema/schematic_ledger.json` -> `schema/model.sysml` -> `.pipeline/schema.sysml`) directly from raw customer PDFs (`docs/reference/*.pdf`) with **zero** prior-run contamination and **zero** domain hints.
+Prove a deterministic, domain-neutral **OEM Schematic-to-SysML v2 Ingestion & Sharded Blind Verification Architecture** inside `./` (`gintatkinson/uav03-tst01`) that produces a 100% hardware-faithful architectural model (`schema/schematic_ledger.json` -> `schema/model.sysml` -> `.pipeline/schema.sysml`) directly from raw customer PDFs (`docs/reference/*.pdf`) with **zero** prior-run contamination, **zero** domain hints, and **zero** multimodal PDF context-compaction crashes.
 
 ### Strict Scope Boundaries
 - **In Scope (3 Artifacts Only)**:
-  1. `skills/spec-schematic-ingestion/` (`SKILL.md`, `resources/schematic_ledger_schema.json`, `references/blind_schematic_audit_protocol.md`) -- standalone, portable, 100% domain-neutral skill package (`0` edits to `skills/spec-orchestrator/SKILL.md`).
-  2. `schema/schematic_ledger.json` (plus reconciled `schema/extracted/*.md` tables derived strictly from `schematic_ledger.json`) -- extracted cold from `docs/reference/*.pdf` and verified to `0` discrepancies by an independent blind `TypeName="research"` visual auditor.
-  3. `schema/model.sysml` + compiled `.pipeline/schema.sysml` and `.pipeline/schema-digest.json` -- synthesized bijectively from `schema/schematic_ledger.json` under Structural Laws `L1..L8`, verified to `0` discrepancies by a second blind `TypeName="research"` auditor against `docs/reference/*.pdf`, and passing `./target/release/ingest-sysml` (`--allowed-parts` / `--negative-invariants`) and `./target/release/compile-sysml --compile` (`exit 0`).
+  1. `skills/spec-schematic-ingestion/` (`SKILL.md`, `resources/schematic_ledger_schema.json`, `references/blind_schematic_audit_protocol.md`, `references/sysml_v2_compiler_grammar.md`) -- standalone, portable, 100% domain-neutral skill package (`0` edits to `skills/spec-orchestrator/SKILL.md`).
+  2. `schema/schematic_ledger.json` -- extracted cold via **1-PDF-per-subagent sharding** from `docs/reference/*.pdf`, merged in a text-only subagent, and verified to `0` discrepancies by **sharded Blind `TypeName="research"` Audit #1** (`1` `research` subagent per PDF + `1` text-only global ledger `research` subagent).
+  3. `schema/model.sysml` + compiled `.pipeline/schema.sysml` and `.pipeline/schema-digest.json` -- synthesized bijectively from `schema/schematic_ledger.json` under Structural Laws `L1..L8`, verified to `0` discrepancies by **100% text-only Blind `TypeName="research"` Audit #2** (`0` PDF loads), and passing `./target/release/ingest-sysml` (`--allowed-parts` / `--negative-invariants`) and `./target/release/compile-sysml --compile` (`exit 0`).
 - **Explicitly Out of Scope (Hard Stop at Compiled SysML Model)**:
-  - **ZERO** downstream specification regeneration: do NOT modify or re-project `docs/{conops,interfaces,epics,features,user-stories,use-cases,safety,research,management}` and do NOT run `--forward-sync`, `--stpa-transpile`, `assemble-conops`, or `reconcile-backlog`, and do NOT modify GitHub issues.
-  - **ZERO** external repository access: NEVER read, list, grep, stat, or touch `../deap04`, `../deap03`, `~/.deap/keys/*`, or `../DEAP01-spec-core/crates/*`.
+  - **ZERO** downstream specification regeneration: do NOT modify or re-project `docs/{conops,interfaces,epics,features,user-stories,use-cases,safety,research,management}`, leave `schema/extracted/*` completely unread/untouched, do NOT run `--forward-sync`, `--stpa-transpile`, `assemble-conops`, or `reconcile-backlog`, do NOT run full-repo `verify-baseline` checks against stale untouched `docs/*`, and do NOT touch GitHub issues.
+  - **ZERO** external repository access: NEVER read, list, grep, stat, or touch `/Users/perkunas/deap04`, `/Users/perkunas/deap03`, `/Users/perkunas/.deap/keys/*`, or `../DEAP01-spec-core/crates/*`.
   - **ZERO** `DEAP01-spec-core` Rust feature rewrites: consume existing `./target/release/*` binaries as black-box tools.
 
 ---
@@ -25,16 +25,17 @@ Prove a deterministic, domain-neutral **OEM Schematic-to-SysML v2 Ingestion & Bl
 | `FM-03` | **Dropped Internal & Supply Rails**: Power/data lines drawn *inside* a stacked sub-assembly or routed through a distribution/splitter PCB are skipped, leaving controllers/switches unpowered. | Mandatory per-type `requires_electrical_power` + `power_feed_mode` declaration and Law `L6` Supply-Graph Reachability check tracing every powered instance back to an energy source. |
 | `FM-04` | **Topology & Port-Domain Corruption**: Series daisy-chains flatten into stars; multi-drop trunks merge with star stubs; unrelated buses (`Serial` + `USB`, `Bus` + `GPIO`) share hybrid ports; declared `port def`s sit unconnected. | Mandatory `topology` (`series_daisy_hop` + contiguous `series_hop_index`), single-domain directional `declared_ports[]`, bulkhead delegation (`Law L4`), and `0` orphan AST node check (`Law L3`). |
 | `FM-05` | **Diagram Legend & Cross-PDF Drift**: Schematic sidebar rules (kinematic control laws, co-packaged secondary sensors, inverted interlock polarity, optional R&D branches) and cross-PDF conflicts get lost in prose comments. | Mandatory `co_packaged_functions[]`, `functional_invariants[]`, and `cross_document_reconciliations[]` arrays lowered directly into formal `constraint def` / `requirement def` / `state def` AST nodes (`Law L7`, `Law L8`). |
+| `FM-06` | **Multimodal PDF Context Compaction Crash**: `read_file` on binary PDFs ignores `StartLine`/`EndLine` and renders every page screenshot + OCR per call (~204 pages across 6 PDFs), overflowing orchestrator or unsharded auditor context. | Mandatory **Zero-PDF Orchestrator**, **1-PDF-per-subagent single whole-read** (`0` `StartLine`/`EndLine` args, solo execution for PDFs `> 10 MB`), scratch-dir JSON sharding, sharded Audit #1, and 100% text-only Audit #2. |
 
 ---
 
 ## 3. Exact Specification of `skills/spec-schematic-ingestion/`
 
 ### 3.1 `resources/schematic_ledger_schema.json` (JSON Schema Draft 2020-12)
-Every object schema MUST enforce `"additionalProperties": false` and `0` concrete customer/domain tokens (`rules/sysml-ssot-completeness.md` Check 19). Required root properties:
+Every object schema MUST enforce `"additionalProperties": false` and `0` concrete customer/domain tokens (`rules/sysml-ssot-completeness.md` Check 19). Required root properties (with an optional `"$defs"` sub-schema supporting per-document extraction shards before merge):
 1. `schema_version`: integer `const: 1`.
 2. `source_documents[]` (`minItems: 1`):
-   - `doc_id`, `relative_path`, `page_count` (`integer >= 1`), `inspected_pages[]` (`integer[]` listing every visually inspected diagram, pinout, CAD, and specification page).
+   - `doc_id`, `relative_path`, `file_size_bytes` (`integer >= 1`), `page_count` (`integer >= 1`), `inspected_pages[]` (`integer[]` listing every visually inspected diagram, pinout, CAD, and specification page).
 3. `enclosures[]` (`minItems: 1`, ordered parent-before-child tree $T_E$):
    - `enclosure_id`, `canonical_part_def` (`UpperCamelCase`), `canonical_instance_name` (`lowerCamelCase | null`, `null` only at root), `oem_exact_label`, `parent_enclosure_id` (`string | null`), `boundary_placement` (`"interior" | "boundary_straddling" | "external_segment"`), `cardinality` (`"1" | "0..1"`), `populated_in_production` (`boolean`), `source_ref` (`{ doc_id, page, locator }`).
 4. `component_types[]` (`minItems: 1`, distinct hardware/software classifiers $V_T$):
@@ -50,8 +51,15 @@ Every object schema MUST enforce `"additionalProperties": false` and `0` concret
 9. `cross_document_reconciliations[]`:
    - `gap_id`, `summary`, `source_a`, `source_b`, `authoritative_disposition`.
 
-### 3.2 `SKILL.md` & Structural Lowering Laws (`L1..L8`)
-`skills/spec-schematic-ingestion/SKILL.md` codifies the 4-stage execution pipeline (Visual Extraction -> Blind Audit #1 -> Bijective SysML Lowering -> Blind Audit #2 + Compiler Gate) and the 8 mandatory lowering laws:
+### 3.2 Multimodal PDF Anti-Compaction & Sharding Protocol (Mandatory in `SKILL.md`)
+1. **Binary PDF `read_file` Physics**: `read_file` on a `.pdf` ignores `StartLine`/`EndLine` and attaches rendered page images + OCR for **all** pages of the PDF on every call.
+2. **Zero-PDF Orchestrator**: The coordinator agent MUST NEVER call `read_file` on any `.pdf` file; it inspects only `ls -la docs/reference` byte sizes to schedule subagents.
+3. **1-PDF-Per-Subagent & Single Whole-Read Rule**: Every subagent that reads a `.pdf` (per-PDF extractor or per-PDF Blind Audit #1 shard) receives **at most 1 `.pdf` path**, calls `read_file` **at most once** on that `.pdf` with **zero `StartLine`/`EndLine` arguments**, and NEVER issues parallel `read_file` calls on PDFs. Any `.pdf` `> 10 MB` runs **solo (`1` active subagent, `0` concurrent peers)** and is terminated/reclaimed immediately upon completion.
+4. **Scratch-Sharded Extraction & Text-Only Merge**:
+   - Dispatch 1 bounded extractor subagent per PDF writing `<appDataDir>/brain/<conversation-id>/scratch/shards/<doc_id>.json` (outside the Git working tree so temporary shards never dirty `git status --porcelain`; always extract the primary system block-diagram PDF first so canonical IDs anchor subsequent manual/ICD shards).
+   - Dispatch 1 **text-only (`0`-PDF)** merge subagent to reconcile all `<doc_id>.json` shards into `schema/schematic_ledger.json` (`0` duplicate entities, resolved cross-PDF conflicts in `cross_document_reconciliations[]`).
+
+### 3.3 Structural Lowering Laws (`L1..L8` in `SKILL.md`)
 - **Law `L1` (Enclosure Tree Isomorphism)**: Every entry in `enclosures[]` lowers `1:1` to a composite `part def` instantiated at its exact `parent_enclosure_id` nesting level (`0` omitted or flattened dashed boxes). Optional `0..1` assemblies (`populated_in_production == false`) are modeled structurally alongside explicit production-inhibit constraints rather than reduced to booleans.
 - **Law `L2` (Classifier vs. Instance Separation -- Zero Chimeras, Zero Duplicate Types)**: `|component_types| == |leaf part defs|` and `|component_instances| == |leaf part usages|`. Two physically distinct OEM boxes may never share a `part def`; `k` identical physical units (`k > 1`) share **one** `part def` and instantiate **`k`** distinct `part` usages.
 - **Law `L3` (Single-Domain Directional Ports & Zero Orphan Definitions)**: Every port carries exactly one `domain` with faithful `in`/`out`/`inout` directionality (`0` hybrid ports multiplexing separate cables such as `UART + USB` or `RS-485 + GPIO`). Every declared `port def`, `item def`, and `part def` in `schema/model.sysml` has `>= 1` usage and connection (`0` dead declarations).
@@ -61,9 +69,104 @@ Every object schema MUST enforce `"additionalProperties": false` and `0` concret
 - **Law `L7` (Formal AST Realization of Legends, Co-Packaged Functions & Conflicts)**: Every entry in `co_packaged_functions[]`, `functional_invariants[]`, and `cross_document_reconciliations[]` lowers to a formal `attribute`, `constraint def`, `requirement def` (`satisfy` / `verify` bound), `action def`, or `state def` -- never stranded in `doc /* ... */` comments alone.
 - **Law `L8` (Root Lifecycle `state def` & Compiler Gate)**: The root `package` declares a top-level system lifecycle `state def` (`>= 2` states with `Initial` and `Terminal` transitions). `./target/release/ingest-sysml` (`--allowed-parts` and `--negative-invariants` derived mechanically from `schematic_ledger.json`) and `./target/release/compile-sysml --compile` must both exit `0`.
 
-### 3.3 `references/blind_schematic_audit_protocol.md` (Two Independent `TypeName="research"` Gates)
-- **Blind Audit #1 (`PDFs` vs. `schema/schematic_ledger.json`)**: Fresh `TypeName="research"` subagent (`0` shell access) receives ONLY `docs/reference/*.pdf`, `schematic_ledger_schema.json`, `blind_schematic_audit_protocol.md`, and `schema/schematic_ledger.json` (`0` access to `schema/extracted/*` or `*.sysml`). Independently counts and diffs all dashed boundaries, boundary-straddling items, solid boxes, internal/external power wires, signal/RF/coax/mechanical lines, series hop orders, spare pins, sidebar functional paragraphs, and cross-PDF parameter conflicts. Must return `0` discrepancies before SysML authoring begins.
-- **Blind Audit #2 (`PDFs` + `schematic_ledger.json` vs. `schema/model.sysml`)**: Second fresh `TypeName="research"` subagent verifies Laws `L1..L8` across `schema/model.sysml` and `.pipeline/schema-digest.json` (exact `enclosures[]`, `component_types[]`, `component_instances[]`, and `wires[]` counts; `100%` power-reachability table; `0` chimeras; `0` hybrid ports; `0` unconnected `port def`/`part def`/`item def` nodes; `100%` `functional_invariants[]` AST realization). Must return `0` discrepancies before commit.
+### 3.4 `references/blind_schematic_audit_protocol.md` (Sharded Audit #1 + Text-Only Audit #2)
+- **Blind Audit #1 (`Sharded Per-PDF Visual Diff + Text-Only Global Ledger Audit`)**:
+  1. **Per-PDF Visual Shards (`1` `TypeName="research"` subagent per PDF; solo if `> 10 MB`)**: Receives ONLY its single assigned `docs/reference/<file>.pdf` (calling `read_file` once with `0` line-range args), `schematic_ledger_schema.json`, `blind_schematic_audit_protocol.md`, and `schema/schematic_ledger.json` (`0` access to `schema/extracted/*` or `*.sysml`). Independently counts and diffs every dashed boundary, boundary-straddling item, solid box, internal/external power wire, signal/RF/coax/mechanical line, series hop order, spare pin, sidebar functional paragraph, and parameter table in that PDF against `schema/schematic_ledger.json`.
+  2. **Global Text-Only Ledger Audit (`1` `TypeName="research"` subagent; `0` PDF reads)**: Validates JSON Schema conformance, referential integrity across all foreign keys (`parent_enclosure_id`, `type_id`, `instance_id`, `port_name`), contiguous `0..m` `series_hop_index` chains, global supply-graph reachability for every `requires_electrical_power == true` instance, and completeness of `cross_document_reconciliations[]`.
+  - **Exit Criterion**: `0` discrepancies across all per-PDF shards and global ledger audit before SysML synthesis begins.
+- **Blind Audit #2 (`100% Text-Only Ledger <-> SysML Bijection Audit; 0 PDF Reads`)**:
+  - Fresh `TypeName="research"` subagent (`0` shell access, **`0` PDF reads**) receives `schema/schematic_ledger.json`, `skills/spec-schematic-ingestion/SKILL.md`, `schema/model.sysml`, and `.pipeline/schema-digest.json`, verifying Laws `L1..L8` line-by-line (exact `enclosures[]`, `component_types[]`, `component_instances[]`, and `wires[]` counts; `100%` power-reachability table; `0` chimeras; `0` hybrid ports; `0` unconnected `port def`/`part def`/`item def` nodes; `100%` `functional_invariants[]` AST realization; root `state def` present). Must return `0` discrepancies before commit.
+
+### 3.5 `references/sysml_v2_compiler_grammar.md` (Domain-Neutral `compile-sysml` Surface Syntax)
+Because `schema/model.sysml` is quarantined, store and follow this verified, 100% domain-neutral surface grammar accepted by `./target/release/compile-sysml --compile`:
+
+```sysml
+doc /* Root system model header comment. */
+package SystemRootPackage {
+    state def SystemLifecycleState {
+        state PreOperational;
+        state OperationalActive;
+        transition T_Init first Initial then PreOperational;
+        transition T_Run first PreOperational accept readinessConfirmed then OperationalActive;
+        transition T_Done first OperationalActive then Terminal;
+    }
+    part def IntegratedSystemRoot {
+        connection def CONN_EXT_01 {
+            connect segmentA.bulkheadPowerOut to segmentB.bulkheadPowerIn;
+        }
+        part segmentA : PrimarySegmentEnclosure {}
+        part segmentB : SecondarySegmentEnclosure {}
+    }
+    package SubsystemDomainPackage {
+        port def RegulatedDcOutPort {
+            attribute direction = "out";
+            attribute itemType = "DcRailPowerItem";
+            attribute protocol = "IF-PWR-001";
+        }
+        port def RegulatedDcInPort {
+            attribute direction = "in";
+            attribute itemType = "DcRailPowerItem";
+            attribute protocol = "IF-PWR-001";
+        }
+        item def DcRailPowerItem {
+            attribute nominalVoltageV : Real = 12.0;
+        }
+        action def RegulateSubsystemPower(in inputBusV : Real, out railHealthy : Boolean);
+        constraint def VoltageBoundsConstraint {
+            in railV : Real && attribute invariantExpr : String = "railV >= 12.0 and railV <= 32.0";
+        }
+        requirement def REQ_L_01 {
+            doc /* Loss description. */
+            attribute severity : String = "Catastrophic";
+        }
+        requirement def REQ_H_01 {
+            doc /* Hazard description. */
+            attribute severity : String = "Catastrophic";
+        }
+        requirement def REQ_UCA_01 {
+            doc /* Unsafe control action description. */
+            attribute ucaType : String = "Not Provided";
+            @TriggersHazard("REQ_H_01");
+        }
+        requirement def REQ_SC_01 {
+            text = "Safety constraint statement.";
+            @SafetyRealises("REQ_UCA_01");
+        }
+        use case def UC_01_OperateSubsystem {
+            subject LeafControllerUnit;
+            actor SystemOperator;
+            objective "Operational objective statement.";
+        }
+        test case def TC_01_VerifySubsystemRail {
+            subject LeafControllerUnit;
+            verify requirement REQ_SC_01;
+            objective "Verification objective statement.";
+            step measureNominalRailVoltage;
+        }
+        capability def SubsystemPowerRegulationCapability;
+        interaction def INT_01_PowerStartupSequence {}
+        part def PowerRegulatorUnit {
+            attribute outputNominalV : Real = 12.0;
+            port out dcRailOut : RegulatedDcOutPort;
+        }
+        part def LeafControllerUnit {
+            attribute controllerClockHz : Real = 100.0;
+            port in dcRailIn : RegulatedDcInPort;
+        }
+        part def NestedStackAssembly {
+            port out statusRailOut : RegulatedDcOutPort;
+            connection def CONN_INT_01 {
+                connect regulator.dcRailOut to controller.dcRailIn;
+            }
+            connection def CONN_BULKHEAD_01 {
+                connect regulator.dcRailOut to statusRailOut;
+            }
+            part regulator : PowerRegulatorUnit {}
+            part controller : LeafControllerUnit {}
+        }
+    }
+}
+```
 
 ---
 
@@ -75,15 +178,20 @@ You are starting a clean-sheet modeling session in `/Users/perkunas/uav03-tst01`
 Current `HEAD` contains a flawed first-pass SysML model (`schema/model.sysml` and `schema/extracted/*`) that flattened nested physical enclosures, merged distinct hardware boxes into synthetic "chimera" `part def`s, omitted internal power and signal connections, flattened series daisy-chains, multiplexed unrelated buses onto hybrid ports, and modeled from lossy prose summaries instead of the OEM drawings.
 
 Read `docs/plans/SCHEMATIC_INGESTION_SKILL_AND_MODEL_PLAN.md` on Turn 1 and execute its exact single-scope specification:
-1. Build the standalone, 100% domain-neutral skill package `skills/spec-schematic-ingestion/` (`SKILL.md`, `resources/schematic_ledger_schema.json`, `references/blind_schematic_audit_protocol.md`).
-2. Apply that skill cold to `docs/reference/*.pdf` (with ZERO reliance on the prior flawed `schema/model.sysml` or `schema/extracted/*`) to produce `schema/schematic_ledger.json` (passing Blind `research` Audit #1 with `0` discrepancies) and `schema/model.sysml` + compiled `.pipeline/schema.sysml` / `.pipeline/schema-digest.json` (passing Laws `L1..L8`, Blind `research` Audit #2 with `0` discrepancies, `./target/release/ingest-sysml --allowed-parts ... --negative-invariants ...`, and `./target/release/compile-sysml --compile` with `exit 0`).
+1. Build the standalone, 100% domain-neutral skill package `skills/spec-schematic-ingestion/` (`SKILL.md`, `resources/schematic_ledger_schema.json`, `references/blind_schematic_audit_protocol.md`, `references/sysml_v2_compiler_grammar.md`).
+2. Apply that skill cold to `docs/reference/*.pdf` (with ZERO reliance on the prior flawed `schema/model.sysml` or `schema/extracted/*`) to produce `schema/schematic_ledger.json` (passing sharded Blind `research` Audit #1 with `0` discrepancies) and `schema/model.sysml` + compiled `.pipeline/schema.sysml` / `.pipeline/schema-digest.json` (passing Laws `L1..L8`, text-only Blind `research` Audit #2 with `0` discrepancies, `./target/release/ingest-sysml --allowed-parts ... --negative-invariants ...`, and `./target/release/compile-sysml --compile` with `exit 0`).
 
 Hard Constraints (Non-Negotiable):
-1. **Strict Scope Ceiling (STOP at Compiled SysML Model)**: Do NOT regenerate or modify `docs/{conops,interfaces,epics,features,user-stories,use-cases,safety,research,management}`, do NOT run `--forward-sync`, `--stpa-transpile`, `assemble-conops`, or `reconcile-backlog`, do NOT edit `skills/spec-orchestrator/SKILL.md`, and do NOT touch GitHub issues.
+1. **Strict Scope Ceiling (STOP at Compiled SysML Model)**: Do NOT regenerate or modify `docs/{conops,interfaces,epics,features,user-stories,use-cases,safety,research,management}`, do NOT run `--forward-sync`, `--stpa-transpile`, `assemble-conops`, or `reconcile-backlog`, do NOT run full-repo baseline checks that compare new `schema/model.sysml` names against untouched legacy `docs/*`, do NOT edit `skills/spec-orchestrator/SKILL.md`, and do NOT touch GitHub issues.
 2. **External Repository Firewall**: NEVER read, list, grep, stat, or touch `/Users/perkunas/deap04`, `/Users/perkunas/deap03`, `/Users/perkunas/.deap/keys/*`, or `../DEAP01-spec-core/crates/*`.
-3. **Prior-Run Quarantine**: Do NOT read or reuse existing `schema/model.sysml` or `schema/extracted/*` during schematic extraction or SysML synthesis -- inspect every page of every PDF in `docs/reference/*.pdf` directly via `read_file` so zero prior modeling bias leaks into `schema/schematic_ledger.json` or `schema/model.sysml`. Use `ask_question` ONLY if a genuine OEM configuration option (e.g., optional R&D kit population) cannot be resolved deterministically from the PDFs alone.
-4. **Pure Domain-Neutrality in the Skill (`Check 19`)**: `skills/spec-schematic-ingestion/**` must contain ZERO concrete customer, vehicle, weapon, sensor-model, or vendor tokens -- use strictly abstract metamodel terms so the skill is portable across any engineering domain.
-5. **Governance & Execution Discipline (`AGENTS.md`)**:
-   - On Turn 1, inspect `docs/plans/SCHEMATIC_INGESTION_SKILL_AND_MODEL_PLAN.md`, `ls docs/reference`, `git status --short --branch`, and `./target/release/{ingest-sysml,compile-sysml} --help` read-only, write your session execution plan to `<appDataDir>/brain/<conversation-id>/implementation_plan.md` (and `.pipeline/plans/schematic-ingestion-session-plan.md`), and **STOP** for explicit `PROCEED` approval before mutating any other repository file.
-   - After `PROCEED`, delegate all repository file writes to bounded subagents (`<= 200`-word prompts referencing disk paths; `<= 2` concurrent subagents; reclaim all subagents on completion); run both blind `TypeName="research"` audits (`0` shell access) to `0` discrepancies; never invoke Python/Perl/Ruby/Node or shell file-mutation operators; leave `0` `.DS_Store` files; use ASCII `--` only (`0` Unicode em dashes); commit via explicit paths and verify `git diff origin/main` is empty.
+3. **Prior-Run Quarantine**: NEVER read, grep, or reuse existing `schema/model.sysml` or `schema/extracted/*` during schematic extraction, auditing, or SysML synthesis (leave `schema/extracted/*` untouched and unread; use the domain-neutral grammar in `docs/plans/SCHEMATIC_INGESTION_SKILL_AND_MODEL_PLAN.md` Section 3.5 for `compile-sysml` syntax) so zero prior modeling bias leaks into `schema/schematic_ledger.json` or `schema/model.sysml`. Use `ask_question` ONLY if a genuine OEM configuration option (e.g., optional R&D kit population) cannot be resolved deterministically from the PDFs alone.
+4. **Multimodal PDF Context Hygiene Lock (Anti-Compaction -- Mandatory in Session & Skill)**:
+   - `read_file` on a binary `.pdf` ignores `StartLine`/`EndLine` parameters and attaches full-page screenshots + OCR for EVERY page of the PDF on every invocation.
+   - **Zero-PDF Orchestrator**: The main orchestrator MUST NEVER call `read_file` on any `.pdf` file.
+   - **1-PDF-Per-Subagent & Single Whole-Read Rule**: Any subagent (extraction or Blind `research` Audit #1) inspecting a `.pdf` MUST receive **at most 1 `.pdf` path**, MUST call `read_file` **at most once** on that `.pdf` with **zero `StartLine`/`EndLine` arguments**, and MUST NEVER issue parallel `read_file` calls on a `.pdf`. Any `.pdf` larger than `10 MB` MUST run in a solo subagent (`0` concurrent subagents) and be reclaimed immediately.
+   - **Sharded Extraction & Sharded Audits**: Extract per-PDF JSON shards to `<appDataDir>/brain/<conversation-id>/scratch/shards/<doc_id>.json` (starting with the smallest block-diagram PDF to anchor canonical IDs, keeping temporary shards outside the Git working tree), merge shards into `schema/schematic_ledger.json` in a text-only (`0`-PDF) subagent, run Blind `research` Audit #1 as **1 `research` subagent per PDF** (`doc_id`-scoped) + **1 text-only global ledger `research` subagent**, and run Blind `research` Audit #2 (`schematic_ledger.json` <-> `schema/model.sysml` + `.pipeline/schema-digest.json` + Laws `L1..L8`) strictly **text-only (`0` PDF reads)**. Encode this domain-neutral sharding rule inside `skills/spec-schematic-ingestion/` as well.
+5. **Pure Domain-Neutrality in the Skill (`Check 19`)**: `skills/spec-schematic-ingestion/**` must contain ZERO concrete customer, vehicle, weapon, sensor-model, or vendor tokens -- use strictly abstract metamodel terms so the skill is portable across any engineering domain. Verify `skills/spec-schematic-ingestion/**` and `schema/{schematic_ledger.json,model.sysml}` via read-only search for domain leaks, `.DS_Store` (`Check 11`), and Unicode dashes before committing.
+6. **Governance & Execution Discipline (`AGENTS.md`)**:
+   - On Turn 1, read-only inspect `AGENTS.md`, `rules/sysml-ssot-completeness.md`, `docs/plans/SCHEMATIC_INGESTION_SKILL_AND_MODEL_PLAN.md`, `ls -la docs/reference` (note file sizes for solo-PDF scheduling), `git status --short --branch`, and `./target/release/{ingest-sysml,compile-sysml} --help`; write your session execution plan using native file-write tools to `<appDataDir>/brain/<conversation-id>/implementation_plan.md` (and `.pipeline/plans/schematic-ingestion-session-plan.md`); and **STOP** for explicit `PROCEED` approval before mutating any other repository file.
+   - After `PROCEED`, delegate all repository file writes to bounded subagents (`<= 200`-word prompts referencing disk paths; `<= 2` concurrent subagents, `1` solo for PDFs `> 10 MB`; reclaim all subagents on completion); run both blind `TypeName="research"` audits (`0` shell access) to `0` discrepancies; never invoke Python/Perl/Ruby/Node or shell file-mutation operators; leave `0` `.DS_Store` files; use ASCII `--` only (`0` Unicode em/en dashes); stage and commit tracked deliverables via explicit paths (`git add -- ...`, `git commit --only -- ...`), push to `origin/main` (per `AGENTS.md` rules), and verify both `git status --porcelain` and `git diff origin/main` are empty.
 ```
