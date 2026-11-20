@@ -1,66 +1,102 @@
 flowchart TD
-    %% Level 1C ICD System Interface Matrix Topology - Avenger5V25IntegratedSystem (14 LRUs, 24 ICD Links)
+    %% Level 1C ICD System Interface Matrix - Avenger5IntegratedSystem (SSOT: .pipeline/schema.sysml)
+    %% Regenerated for 1:1 bidirectional parity with ConOps Section 4 (Figure 4.1 SV-1, CONN-01..CONN-14)
+    %% Option 3 compact blocks, direction TB, vertical tier partitioning (max 3 columns), ~~~ spacers between AST segments
+    %% Rule E5: inter-segment edges route at segment/composite block boundary; internal bus detail in sv1_platform_subsystems.mmd
+    %% Ports per block derive from ConOps Table 4.8 (29 ports) and .pipeline/schema.sysml part def port declarations
+    %% Retired identifiers banned: Avenger5V25IntegratedSystem, ArtronEsadAndSensorUnit, ElectricPropulsionUnit,
+    %% FlightControllerCubeOrangePlus, CompanionComputeRpiCm5, NavigationAndAirDataSuite, DroneCanSurfaceActuation,
+    %% OnboardEthernetAndC2RadioUnit, EoIrSeekerAndTrackerUnit, Pl40PneumaticLauncher, SwarmC2OperatorConsole,
+    %% GroundRfStationAndAntennaTracker, PowerMeterAndRbfSwitch -> new schema-derived equivalents below.
 
-    subgraph Tier_1 ["Tier 1 - Power and Launch"]
+    subgraph External_Actors["External Operating Environment & Actors"]
         direction TB
-        MainBatteryAndFuseUnit["MainBatteryAndFuseUnit<br/>12S2P Pack and 200A Fuse<br/>• protectedDcOut (OUT)"]
-        PowerMeterAndRbfSwitch["PowerMeterAndRbfSwitch<br/>V or I Meter and RBF Key 2<br/>• mainDcIn (IN)<br/>• escDriveOut (INOUT)<br/>• trunkDcOut970cm (OUT)<br/>• can1Tap (INOUT)"]
-        Pl40PneumaticLauncher["Pl40PneumaticLauncher<br/>ELI PL-40 Rev 2.6 Rail<br/>• mechLaunchOut (OUT)"]
+        Operator["<b>Pilot / Supervisory Operator</b><br/>- PORT_OP_C2 (INOUT)"]
+        ContestedEnv["<b>Contested Environment</b><br/>- PORT_ENV_RF (IN)<br/>- PORT_ENV_OPT (IN)"]
     end
 
-    subgraph Tier_2 ["Tier 2 - Prop EPS and Flight"]
+    subgraph Ground_Control_Segment["Ground Control Segment"]
         direction TB
-        ElectricPropulsionUnit["ElectricPropulsionUnit<br/>Airframe IBEX160 and AXI5345<br/>• escDriveIn (INOUT)<br/>• mechLaunchRailIn (IN)<br/>• inertialSs1Out (OUT)"]
-        ElectronicPowerSystemEps["ElectronicPowerSystemEps<br/>DC-DC Rails and Load Switch<br/>• trunkDcIn (IN)<br/>• can1Tap (INOUT)<br/>• servo8VOut (OUT)<br/>• radio12VOut (OUT)<br/>• esad14VOut (OUT)<br/>• sensorPowerOut (OUT)<br/>• gimbalPowerOut (OUT)"]
-        FlightControllerCubeOrangePlus["FlightControllerCubeOrangePlus<br/>Cube orange+ and Software RTA<br/>• can1Master (INOUT)<br/>• can2Master (INOUT)<br/>• serialRpi (INOUT)<br/>• serialGnss (INOUT)<br/>• serialTrip6 (INOUT)<br/>• serialRadioAndUsbExt (INOUT)"]
+        subgraph GCS_Tier_1["Ground Tier 1"]
+            direction TB
+            GcsConsole["<b>Ground Control Console</b><br/>- PORT_GCS_C2 (INOUT)<br/>- PORT_GCS_USB (INOUT)"]
+            GcsRadio["<b>Ground RF Station & Antenna</b><br/>- PORT_GCS_RF (INOUT)<br/>- PORT_GCS_FIBER (INOUT)"]
+            GcsTripod["<b>Tripod & Rotator</b><br/>- PORT_GCS_ROT (INOUT)"]
+        end
+        subgraph GCS_Tier_2["Ground Tier 2"]
+            direction TB
+            GcsBatCharger["<b>GCS & UAV Battery Charger</b><br/>- PORT_CHRG_OUT (OUT) (opt.)"]
+            GcsCases["<b>Transport Cases GCS / Spares</b><br/>- PORT_CASE_STOW (OUT) (opt.)"]
+        end
+        GCS_Tier_1 ~~~ GCS_Tier_2
     end
 
-    subgraph Tier_3 ["Tier 3 - Actuators Nav and RPi"]
+    subgraph Launch_Segment["Launch Segment"]
         direction TB
-        DroneCanSurfaceActuation["DroneCanSurfaceActuation<br/>8x HV6160 and Splitter PCB<br/>• can1TailFins (INOUT)<br/>• can2SplitterIn (INOUT)<br/>• can2DaisyOutToSensors (INOUT)<br/>• servo8VIn (IN)"]
-        NavigationAndAirDataSuite["NavigationAndAirDataSuite<br/>Asterx GNSS 2x RM3100 Pitot<br/>• serialGnss (INOUT)<br/>• can2DaisyIn (INOUT)<br/>• sensorPowerIn (IN)"]
-        CompanionComputeRpiCm5["CompanionComputeRpiCm5<br/>RPI CM5004032 and OC Master<br/>• serialFc (INOUT)<br/>• ethSwitch (INOUT)<br/>• esadOcControl (INOUT)"]
+        subgraph LCH_Tier_1["Launch Tier 1"]
+            direction TB
+            Pl40Launcher["<b>PL-40 Pneumatic Launcher</b><br/>- PORT_LAUNCH_MECH (OUT)"]
+            Pl40Compressor["<b>PL-40 Compressor Unit</b><br/>- PORT_PL40_PWR (IN)<br/>- PORT_PL40_PNEU (OUT)"]
+            Pl40Rail["<b>PL-40 Launcher Rail Assembly</b><br/>- PORT_RAIL_LOAD (INOUT)"]
+        end
     end
 
-    subgraph Tier_4 ["Tier 4 - Payload RF and ESAD"]
+    subgraph Air_Vehicle_Segment["Air Vehicle Segment / System Under Design"]
         direction TB
-        EoIrSeekerAndTrackerUnit["EoIrSeekerAndTrackerUnit<br/>Nighthawk2UZ and Trip6 EO-IR<br/>• gimbalPowerIn (IN)<br/>• serialFc (INOUT)<br/>• ethSwitch (INOUT)"]
-        OnboardEthernetAndC2RadioUnit["OnboardEthernetAndC2RadioUnit<br/>ETH Switch Ext Bd DTC Radio<br/>• radio12VIn (IN)<br/>• fcSerialAndUsbExt (INOUT)<br/>• ethRpiPort (INOUT)<br/>• ethTrip6Port (INOUT)<br/>• rfDatalinkOut (INOUT)"]
-        ArtronEsadAndSensorUnit["ArtronEsadAndSensorUnit<br/>Artron ESAD Sensor Bd RBF 3<br/>• esad14VIn (IN)<br/>• ocControlIn (INOUT)<br/>• inertialSs1In (IN)"]
+        subgraph AV_Tier_1["AV Tier 1 - Propulsion & Power"]
+            direction TB
+            Propulsion["<b>Propulsion Subsystem</b><br/>- PORT_PROP_PWR (IN)<br/>- PORT_PROP_PWM (IN)"]
+            AutopilotStack["<b>Autopilot Stack ASTK A5 V25</b><br/>- PORT_AUT_CAN (INOUT)<br/>- PORT_AUT_PWM (OUT)"]
+            EpsModule["<b>EPS Module</b><br/>- PORT_EPS_RAILS (OUT)"]
+        end
+        subgraph AV_Tier_2["AV Tier 2 - Actuation & Sensors"]
+            direction TB
+            FinsGroup["<b>Fins Actuator Group</b><br/>- PORT_FINS_CAN (INOUT)<br/>- PORT_FINS_PWR (IN)"]
+            WingsGroup["<b>Wings Actuator Group</b><br/>- PORT_WINGS_CAN (INOUT)<br/>- PORT_WINGS_PWR (IN)"]
+            ProxBoard["<b>Proximity Sensor Board</b><br/>- PORT_PROX_TRIG (OUT)<br/>- PORT_PROX_PWR (IN)"]
+        end
+        subgraph AV_Tier_3["AV Tier 3 - Lethal & Nav"]
+            direction TB
+            LethalPack["<b>Lethal Package</b><br/>- PORT_LETHAL_PWR (IN)<br/>- PORT_LETHAL_RS485 (INOUT)"]
+            GnssNav["<b>GNSS & Navigation</b><br/>- PORT_GNSS_SER (INOUT)<br/>- PORT_PITOT_PWR (IN)"]
+            GimbalPack["<b>Gimbal & Camera Compute</b><br/>- PORT_GIMBAL_PWR (IN)<br/>- PORT_GIMBAL_ETH (INOUT)"]
+        end
+        subgraph AV_Tier_4["AV Tier 4 - Comms"]
+            direction TB
+            RadioPack["<b>Radio Module & Antennas</b><br/>- PORT_RF_DL (INOUT)<br/>- PORT_RF_ANT (INOUT)"]
+            EthSwitch["<b>Ethernet Switch</b><br/>- PORT_ETH (INOUT)"]
+            Rpi["<b>RPi CM5004032</b><br/>- PORT_RPI_ETH (INOUT)<br/>- PORT_RPI_SER (INOUT)"]
+        end
+        subgraph AV_Tier_5["AV Tier 5 - Boundary"]
+            direction TB
+            AV_Boundary["<b>Air Vehicle Boundary Parts</b><br/>- PORT_AV_MECH (IN)<br/>- PORT_AV_RF (INOUT)"]
+        end
+        AV_Tier_1 ~~~ AV_Tier_2
+        AV_Tier_2 ~~~ AV_Tier_3
+        AV_Tier_3 ~~~ AV_Tier_4
+        AV_Tier_4 ~~~ AV_Tier_5
     end
 
-    subgraph Tier_5 ["Tier 5 - Ground C2 and RF"]
-        direction TB
-        GroundRfStationAndAntennaTracker["GroundRfStationAndAntennaTracker<br/>Ground DTC RF MARS DIR OMNI<br/>• gcsStationPort (INOUT)<br/>• rfAirPort (INOUT)"]
-        SwarmC2OperatorConsole["SwarmC2OperatorConsole<br/>SwarmC2 Win11 Rugged Tablet<br/>• gcsStationPort (INOUT)"]
-    end
+    External_Actors ~~~ Ground_Control_Segment
+    Ground_Control_Segment ~~~ Launch_Segment
+    Launch_Segment ~~~ Air_Vehicle_Segment
 
-    Tier_1 ~~~ Tier_2
-    Tier_2 ~~~ Tier_3
-    Tier_3 ~~~ Tier_4
-    Tier_4 ~~~ Tier_5
+    %% Inter-segment / intra-segment interface edges (1:1 with ConOps Section 4 CONN-01..CONN-14)
+    Operator -->|"CONN-01: Role Auth & Flight C2"| GcsConsole
+    ContestedEnv -->|"CONN-02: GNSS RF & Air Data"| GnssNav
+    GcsConsole -->|"CONN-03: Ground C2 & Fiber"| GcsRadio
+    GcsRadio -->|"CONN-04: 4.4-5.0 GHz C2 RF Link"| RadioPack
+    Pl40Launcher -->|"CONN-05: Mech Launch Zero Wire"| AV_Boundary
+    Propulsion -->|"CONN-06: ESC Drive PWM & UART"| AutopilotStack
+    AutopilotStack -->|"CONN-07: CAN1 Tail Fins"| FinsGroup
+    AutopilotStack -->|"CONN-08: CAN2 Wings Daisy"| WingsGroup
+    AutopilotStack -->|"CONN-09: ESAD RS-485 & Arm"| LethalPack
+    LethalPack -->|"CONN-10: HV Fire & Detonation"| AV_Boundary
+    Rpi -->|"CONN-11: ETH Switch to RPi"| EthSwitch
+    GimbalPack -->|"CONN-12: ETH to Trip6"| EthSwitch
+    RadioPack -->|"CONN-13: ETH Radio to Switch"| EthSwitch
+    GcsBatCharger -->|"CONN-14: GCS Battery Charge"| GcsConsole
 
-    MainBatteryAndFuseUnit -->|"CONN-01 IF-PWR-001 36-50.4V DC"| PowerMeterAndRbfSwitch
-    PowerMeterAndRbfSwitch -->|"CONN-02 IF-PWR-004 IF-PWM-001 ESC"| ElectricPropulsionUnit
-    PowerMeterAndRbfSwitch -->|"CONN-03 IF-PWR-006 970cm Trunk"| ElectronicPowerSystemEps
-    ElectronicPowerSystemEps -->|"CONN-04 IF-PWR-007..011 8V Servo"| DroneCanSurfaceActuation
-    ElectronicPowerSystemEps -->|"CONN-05 IF-PWR-007..011 12V Radio"| OnboardEthernetAndC2RadioUnit
-    ElectronicPowerSystemEps -->|"CONN-06 IF-PWR-007..011 14V ESAD"| ArtronEsadAndSensorUnit
-    ElectronicPowerSystemEps -->|"CONN-07 IF-PWR-007..011 Sensor"| NavigationAndAirDataSuite
-    ElectronicPowerSystemEps -->|"CONN-08 IF-PWR-007..011 Gimbal"| EoIrSeekerAndTrackerUnit
-    FlightControllerCubeOrangePlus -->|"CONN-09 IF-CAN1-001 Power Meter"| PowerMeterAndRbfSwitch
-    FlightControllerCubeOrangePlus -->|"CONN-10 IF-CAN1-001 EPS Control"| ElectronicPowerSystemEps
-    FlightControllerCubeOrangePlus -->|"CONN-11 IF-CAN1-001 Tail Fins 1-4"| DroneCanSurfaceActuation
-    FlightControllerCubeOrangePlus -->|"CONN-12 IF-CAN2-001 Wings 5-8"| DroneCanSurfaceActuation
-    DroneCanSurfaceActuation -->|"CONN-13 IF-CAN2-001 Mag and Pitot"| NavigationAndAirDataSuite
-    FlightControllerCubeOrangePlus -->|"CONN-14 IF-SER-001 FC to RPI CM5"| CompanionComputeRpiCm5
-    FlightControllerCubeOrangePlus -->|"CONN-15 IF-SER-001..004 GNSS"| NavigationAndAirDataSuite
-    FlightControllerCubeOrangePlus -->|"CONN-16 IF-SER-001..004 Trip6"| EoIrSeekerAndTrackerUnit
-    FlightControllerCubeOrangePlus -->|"CONN-17 IF-SER-004 and IF-USB-001"| OnboardEthernetAndC2RadioUnit
-    CompanionComputeRpiCm5 -->|"CONN-18 IF-ETH-001 RPI Ethernet"| OnboardEthernetAndC2RadioUnit
-    EoIrSeekerAndTrackerUnit -->|"CONN-19 IF-ETH-001 Trip6 Ethernet"| OnboardEthernetAndC2RadioUnit
-    CompanionComputeRpiCm5 -->|"CONN-20 IF-ORD-001 and 002 ESAD"| ArtronEsadAndSensorUnit
-    OnboardEthernetAndC2RadioUnit -->|"CONN-21 IF-RF-001 4.4-5.0 GHz RF"| GroundRfStationAndAntennaTracker
-    SwarmC2OperatorConsole -->|"CONN-22 IF-GND-001 C2 and Fiber"| GroundRfStationAndAntennaTracker
-    Pl40PneumaticLauncher -->|"CONN-23 IF-MECH-001 Zero Wire"| ElectricPropulsionUnit
-    ElectricPropulsionUnit -->|"CONN-24 Inertial SS1 Launch Accel"| ArtronEsadAndSensorUnit
+    %% Parity statement: 14 interface edges CONN-01..CONN-14 map 1:1 to ConOps Section 4 Figure 4.1 edges;
+    %% 29 embedded ports map 1:1 to ConOps Table 4.8 rows. Detailed wire-level pinouts, RS-485 framing,
+    %% opcodes and CRC-16 reside in Level 1C ICD_01 / ICD_02, not in this view.
